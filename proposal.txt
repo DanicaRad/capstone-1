@@ -1,0 +1,11 @@
+Spoontacular API meal planner
+**  A recipe database “community”  to help users search and save recipes to  categorized lists with custom search options for meal prepping, event and party planning, categorizing their favorite recipes into lists and sharing (or not) with others  **
+
+Users can create accounts, search recipe database and save recipes
+Create and save multiple recipe lists 
+Share recipe lists or make private lists
+Create their own recipes - private or public 
+Search public lists, search own user lists, search for lists by recipes included
+Save other’s public recipe lists and edit once it’s in their list collection
+Upvote, downvote recipe lists
+Potluck lists- lets creator share list with party guests who can “claim” a dish to bring and updates list for all guests - maybe exclude
