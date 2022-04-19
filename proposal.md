@@ -1,7 +1,3 @@
-<style>h1{color:LightBlue}</style>
-<style>h3{color:LightBlue}</style>
-<style>h4{color:LightBlue}</style>
-
 # Spoontacular API Meal Planner
 
 ### 1. What goal will your website be designed to achieve?  
@@ -70,7 +66,7 @@ I’m not really sure what this question is asking if it can be answered without
     **List table/s:**
         Not sure how I’m going to design this yet in a way that makes getting user list data most “inexpensive.”  
 
-- #### What kinds of issues might you run into with your API?  
+- ### What kinds of issues might you run into with your API?  
 
     ALL THE ISSUES! If I knew this, couldn’t I minimize running into them?
     - Website search parameters that are missing on API recipe data
