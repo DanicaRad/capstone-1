@@ -18,6 +18,7 @@ The features of this site would most appeal to women already integrating tech in
 ### 3. What data do you plan on using? You may have not picked your actual API yet, which is fine, just outline what kind of data you would like it to contain. 
 
 I’m not really sure what this question is asking if it can be answered without knowing the API, but here’s my best guess:   
+
 **Users:** 
 - Username
 - Email
@@ -25,8 +26,10 @@ I’m not really sure what this question is asking if it can be answered without
 - Age
 - Dietary intolerances (API endpoints)
 - Diet preferences (API endpoints)  
+
 **Lists:** user created, named lists    
 - Saved recipes (not sure what API recipe data I’ll save on app db)  
+
 **From API, stored to user db:**  
 - Recipe name, url, image, source
 - Cuisine
@@ -35,6 +38,7 @@ I’m not really sure what this question is asking if it can be answered without
 - Dish type
 - MAYBE Nutritional profile
 - MAYBE Ingredients  
+
 **From API for ui search:**
 - All data from above saved to users db
 - User search query terms
@@ -50,12 +54,15 @@ I’m not really sure what this question is asking if it can be answered without
     - Foreign Key: list ids
     - Foreign key: diet id
     - Foreign key: intolerance id  
+
     **Diet table:** 
     - id
-    - API endpoint diet name
+    - API endpoint diet name  
+
     **Intolerance table:** 
     - Id
     - API endpoint intolerance name  
+
     **List table/s:**
         Not sure how I’m going to design this yet in a way that makes getting user list data most “inexpensive.”  
 
@@ -92,12 +99,14 @@ I’m not really sure what this question is asking if it can be answered without
 	**Rough start:**  
     - User starts on homepage with website and feature description; prompted to register or login
     - Once logged in/ registered, directed to their profile page  
-        **Profile Page:**  
+
+    **Profile Page:**  
     - List of their lists
     - Click list to view recipes within lists
     - Click recipes within list to view recipes
     - Buttons to add recipes to or edit a list  
-        **Search Recipes page:**  
+
+    **Search Recipes page:**  
     - Search query term text input 
     - Nutrition, diet, intolerances and cuisine filters
     - Some sort of sort-by feature  
