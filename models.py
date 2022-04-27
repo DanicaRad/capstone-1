@@ -1,33 +1,168 @@
-"""Demo class for sifting through data for planning"""
+"""SQLAlchemy models for Spoonacular."""
 
-class Recipe:
+from flask_bcrypt import Bcrypt
+from flask_sqlalchemy import SQLAlchemy
 
-    def __init__(self, obj):
-        self.id = obj['id']
-        self.title = obj['title']
-        self.source = obj['sourceName']
-        self.source_url = obj['sourceUrl']
-        self.image_url = obj['image']
-        self.summary = self.strip(obj['summary'])
-        self.instructions = self.split(obj['instructions'])
-        self.total_min = obj['readyInMinutes']
-        self.servings = obj['servings']
-        self.ingredients = obj['extendedIngredients']
+bcrypt = Bcrypt()
+db = SQLAlchemy()
+
+class List(db.Model):
+    """Connection of user <---> list"""
+
+    __tablenmame__ = "lists"
+
+    id = db.Column(
+        db.Integer,
+        primary_key=True,
+        autoincrement=True
+    )
+
+    user_id = db.Column(
+        db.Integer,
+        db.ForeignKey("users.id", ondelete="cascade")
+    )
+
+class Recipe(db.Model):
+    """Recipes saved to user lists."""
+
+    __tablename__ = "recipes"
+
+    id = db.Column(
+        db.Integer,
+        primary_key=True
+    )
+
+    title = db.Column(
+        db.Text,
+        nullable=False
+    )
+
+    source = db.Column(
+        db.Text
+    )
+
+    source_url = db.Column(
+        db.Text
+    )
+
+    image_url = db.Column(
+        db.Text
+    )
+
+    summary = db.Column(
+        db.Text
+    )
+    instructions = db.Column(
+        db.Text
+    )
+
+    total_min = db.Column(
+        db.Integer
+    )
+
+    servings = db.Column(
+        db.Integer
+    )
+
+    ingredients = db.Column(
+        db.Text
+    )
+
+class RecipeList(db.Model):
+    """Maps recipes to lists."""
+
+    __tablename__ = "recipes_lists"
+
+    list_id = db.Column(
+        db.Integer,
+        db.ForeignKey("lists.id", ondelete="cascade"),
+        primary_key=True
+    )
+
+    recipe_id = db.Column(
+        db.Integer,
+        db.FireignKey("recipes.id", ondelete="cascade"),
+        primary_key=True
+    )
+
+class User(db.model):
+    """User model for app."""
+
+    __tablename__ = "users"
+
+    id = db.Column(
+        db.Integer,
+        primary_key=True,
+        autoincrement=True
+    )
+
+    email = db.Column(
+        db.Text,
+        nullable=False,
+        unique=True
+    )
+
+    username = db.Column(
+        db.Text,
+        nullable=False,
+        unique=True
+    )
+
+    image_url = db.Column(
+        db.text,
+        defulat="/static/images/default_user.jpg"
+    )
+
+    password = db.Column(
+        db.Text,
+        nullable=False
+    )
+
+    lists = db.Relationship(
+        "List",
+        secondary="recipe_list",
+        primary_join=(List.user_id == id),
+        secondary_join=(RecipeList.list_id == List.id)
+    )
 
     def __repr__(self):
-        return f"<title={self.title}, source_url={self.source_url}, image_url={self.image_url}, instructions={self.instructions}>"
+        return f"<User #{self.id}: {self.username}, {self.email}>"
 
     @classmethod
-    def strip(self, str):
-        """Removes HTML formating from body of text"""
-        stripped = str.replace('<b>', '')
-        strip = stripped.replace('</b>', '')
-        idx = strip.find('spoonacular') + 10
-        i = strip.find('.', idx) + 1
-        return strip[0:i]
+    def signup(cls, username, email, password, image_url):
+        """Sign up user.
 
-    def split(self, str):
-        """Removes suggested recipe HTML links within summary text body."""
-        split = str.split('.')
-        split.pop(-1)
-        return [s.strip() for s in split]
+        Hashes password and adds user to system.
+        """
+
+        hashed_pwd = bcrypt.generate_password_hash(password).decode('UTF-8')
+
+        user = User(
+            username=username,
+            email=email,
+            password=hashed_pwd,
+            image_url=image_url,
+        )
+
+        db.session.add(user)
+        return user
+
+    @classmethod
+    def authenticate(cls, username, password):
+        """Find user with `username` and `password`. If can't find  matching user and/or password, return False."""
+
+        user = cls.query.filter_by(username=username).first()
+
+        if user:
+            is_auth = bcrypt.check_password_hash(user.password, password)
+            if is_auth:
+                return user
+
+        return False
+
+
+def connect_db(app):
+    """Connect this database to provided Flask app."""
+
+    db.app = app
+    db.init_app(app)

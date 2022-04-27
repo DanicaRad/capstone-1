@@ -1,0 +1,13 @@
+{% extends 'base.html' %}
+
+{% block content %}
+
+{% if recipes %}
+    {% for recipe in recipes %}
+        <p><a href="/info/{{ recipe.id }}">{{ recipe.title }}</a></p>
+    {% endfor %}
+
+    {% else %}
+    <p>Sorry, we couldn't find any recipes that matched.</p>
+{% endif %}
+{% endblock %}

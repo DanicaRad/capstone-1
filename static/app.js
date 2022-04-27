@@ -23,3 +23,13 @@ async function getRecipes() {
     })
     console.log(res)
 }
+
+async function searchRecipes() {
+    const res = await axios({
+        url: 'https://api.spoonacular.com/recipes/complexSearch?apiKey=979dfa9f09634c8faf4ba8e387c1b0ab',
+        method: "GET",
+        params: {"tags":"vegetarian,dessert","number":"3"}
+    })
+
+    console.log(res.data)
+}

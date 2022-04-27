@@ -16,4 +16,9 @@
         <li>{{ i }}</li>
         {% endfor %}
     </ol>
+    {% for ing in recipe.ingredients %}
+    <p>{{ ing.amount }} {{ ing.unit }} {{ ing.name }}</p>
+    <p>{{ ing.us }}</p>
+    <p>{{ ing.metric }}</p>
+    {% endfor %}
 {% endblock %}

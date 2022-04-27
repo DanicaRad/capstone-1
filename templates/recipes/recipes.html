@@ -1,0 +1,22 @@
+{% extends 'base.html' %}
+{% block title %}Show recipe search results{% endblock %}
+
+{% block content %}
+
+<h1>RECIPE</h1>
+
+    <h3>{{ recipe.title }}</h3>
+    <p><a href="{{ recipe.source_url }}">{{ recipe.source }}</a></p>
+    <p>{{ recipe.summary }}</p>
+    <p>{{ recipe.summary_long }}</p>
+    <ol>
+        {% for i in recipe.instructions %}
+        <li>{{ i }}</li>
+        {% endfor %}
+    </ol>
+    {% for ing in recipe.ingredients %}
+    <p>{{ ing.amount }} {{ ing.unit }} {{ ing.name }}</p>
+    <p>{{ ing.us }}</p>
+    <p>{{ ing.metric }}</p>
+    {% endfor %}
+{% endblock %}
