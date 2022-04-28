@@ -26,7 +26,7 @@ class APIRecipe:
         """Parse API response into Recipe model."""
 
         recipe = dict([(key, value) for key, value in data.items()])
-        return Recipe(recipe)
+        return APIRecipe(recipe)
 
     def strip_b(self, str):
         """Removes HTML formating from body of text"""
