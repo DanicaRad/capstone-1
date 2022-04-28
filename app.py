@@ -6,14 +6,15 @@ from flask import Flask, render_template, request, flash, redirect, jsonify, ses
 import requests
 from flask_debugtoolbar import DebugToolbarExtension
 from sqlalchemy.exc import IntegrityError
-from site_models import Recipe, ShortRecipe
+from site_models import APIRecipe, ShortRecipe
 from forms import SearchForm, AddUserForm, LoginForm
-from models import db, connect_db, User, List, Recipe, RecipeList
+from models import db, connect_db, User, List, Recipe
 
 CURR_USER_KEY = "curr_user"
 
 app = Flask(__name__)
 
+# app.config['SQLALCHEMY_DATABASE_URI'] = 'postgresql:///spoonacular'
 app.config['SQLALCHEMY_DATABASE_URI'] = (
     os.environ.get('DATABASE_URL', 'postgresql:///spoonacular'))
 
@@ -26,6 +27,8 @@ toolbar = DebugToolbarExtension(app)
 API_KEY = '979dfa9f09634c8faf4ba8e387c1b0ab'
 BASE_URL = f"https://api.spoonacular.com/recipes"
 SIMILAR_URL = f"https://api.spoonacular.com/recipes/similar?apiKey={API_KEY}"
+
+connect_db(app)
 
 #########################################################################
 # User signup / login / logout 
@@ -142,7 +145,7 @@ def get_data():
     resp = response.json()
     [data] = resp['recipes']
     recipe_data = dict([(key, value) for key, value in data.items()])
-    recipe = Recipe(recipe_data)
+    recipe = APIRecipe(recipe_data)
 
     similar = requests.get(SIMILAR_URL, params={"number": "1"})
 
@@ -155,7 +158,7 @@ def get_recipe_details(recipe_id):
     response = requests.get(f"{BASE_URL}/{recipe_id}/information?apiKey={API_KEY}", params={"includeNutrition": "false"})
 
     resp = response.json()
-    recipe = Recipe(resp)
+    recipe = APIRecipe(resp)
 
     return render_template('recipes/recipes.html', recipe=recipe)
 

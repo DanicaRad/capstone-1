@@ -6,21 +6,24 @@ from flask_sqlalchemy import SQLAlchemy
 bcrypt = Bcrypt()
 db = SQLAlchemy()
 
-class List(db.Model):
-    """Connection of user <---> list"""
 
-    __tablenmame__ = "lists"
+class RecipeList(db.Model):
+    """Maps recipes to lists."""
 
-    id = db.Column(
+    __tablename__ = "recipes_lists"
+
+    list_id = db.Column(
         db.Integer,
-        primary_key=True,
-        autoincrement=True
+        db.ForeignKey("lists.id", ondelete="cascade"),
+        primary_key=True
     )
 
-    user_id = db.Column(
+    recipe_id = db.Column(
         db.Integer,
-        db.ForeignKey("users.id", ondelete="cascade")
+        db.ForeignKey("recipes.id", ondelete="cascade"),
+        primary_key=True
     )
+
 
 class Recipe(db.Model):
     """Recipes saved to user lists."""
@@ -68,24 +71,41 @@ class Recipe(db.Model):
         db.Text
     )
 
-class RecipeList(db.Model):
-    """Maps recipes to lists."""
+    lists = db.relationship(
+        'List',
+        secondary="recipes_lists")
 
-    __tablename__ = "recipes_lists"
+    def __repr__(self):
+        return f"<# {self.id}, title: {self.title}>"
 
-    list_id = db.Column(
+
+class List(db.Model):
+    """Connection of user <---> list"""
+
+    __tablename__ = "lists"
+
+    id = db.Column(
         db.Integer,
-        db.ForeignKey("lists.id", ondelete="cascade"),
-        primary_key=True
+        primary_key=True,
+        autoincrement=True
     )
 
-    recipe_id = db.Column(
+    user_id = db.Column(
         db.Integer,
-        db.FireignKey("recipes.id", ondelete="cascade"),
-        primary_key=True
+        db.ForeignKey("users.id", ondelete="cascade")
     )
 
-class User(db.model):
+    user = db.relationship('User')
+    recipes = db.relationship('RecipeList')
+
+    def __repr__(self):
+        return f"<list# {self.id}, user: {self.user_id}>"
+
+
+
+
+
+class User(db.Model):
     """User model for app."""
 
     __tablename__ = "users"
@@ -109,8 +129,8 @@ class User(db.model):
     )
 
     image_url = db.Column(
-        db.text,
-        defulat="/static/images/default_user.jpg"
+        db.Text,
+        default="/static/images/default_user.jpg"
     )
 
     password = db.Column(
@@ -118,11 +138,11 @@ class User(db.model):
         nullable=False
     )
 
-    lists = db.Relationship(
+    lists = db.relationship(
         "List",
-        secondary="recipe_list",
-        primary_join=(List.user_id == id),
-        secondary_join=(RecipeList.list_id == List.id)
+        secondary="recipes_lists",
+        primaryjoin=(List.user_id == id),
+        secondaryjoin=(RecipeList.list_id == List.id)
     )
 
     def __repr__(self):

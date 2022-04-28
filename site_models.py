@@ -2,7 +2,7 @@
 
 from fractions import Fraction
 
-class Recipe:
+class APIRecipe:
     """Detailed recipe"""
 
     def __init__(self, res):
@@ -22,14 +22,12 @@ class Recipe:
     def __repr__(self):
         return f"<title={self.title}, source_url={self.source_url}, image_url={self.image_url}, instructions={self.instructions}>"
 
-    @classmethod
     def parse_data(self, data):
         """Parse API response into Recipe model."""
 
         recipe = dict([(key, value) for key, value in data.items()])
         return Recipe(recipe)
 
-    @classmethod
     def strip_b(self, str):
         """Removes HTML formating from body of text"""
         strip = str.replace('<br>', '')
@@ -37,7 +35,6 @@ class Recipe:
         stripped = strip1.replace('</b>', '')
         return stripped
 
-    @classmethod
     def strip_li(self, str):
         """Removes any list item html."""
 
@@ -47,7 +44,6 @@ class Recipe:
         stripped = strip3.replace('<ul>', '')
         return stripped
 
-    @classmethod
     def strip_links(self, str):
         """Strips suggested recipe links from body of text."""
 
@@ -57,11 +53,7 @@ class Recipe:
                 slice = split[0:split.index(str)]
                 return ".".join(slice) + "."
 
-        # idx = str.find('spoonacular') + 10
-        # i = str.find('.', idx) + 1
-        # return str[0:i]
 
-    @classmethod
     def strip_all(self, str):
         """Strips all unwanted HTML elements from text body."""
         
@@ -70,7 +62,6 @@ class Recipe:
         stripped = self.strip_links(strip2)
         return stripped
 
-    @classmethod
     def split(self, str):
         """Removes suggested recipe HTML links within summary text body."""
         strip1 = self.strip_b(str)
@@ -79,7 +70,6 @@ class Recipe:
         split.pop(-1)
         return [s.strip() for s in split]
 
-    @classmethod
     def parse_ingredients(self, lst):
         """Extracts ingredients and quantity from response ingredient dict."""
         for dict in lst:
@@ -100,7 +90,6 @@ class Ingredient:
         self.us = self.get_conversions(dict["measures"]["us"])
         self.metric = self.get_conversions(dict["measures"]["metric"])
 
-    @classmethod
     def get_amount(self, num):
         """Format floats in ingredient amounts as fraction ratios"""
 
@@ -110,7 +99,6 @@ class Ingredient:
         fract = Fraction(num).limit_denominator(9)
         return f"{fract.numerator}/{fract.denominator}"
 
-    @classmethod
     def get_conversions(self, dict):
         """Make dict from measurement conversions"""
         return {
