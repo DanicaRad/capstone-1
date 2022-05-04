@@ -1,0 +1,28 @@
+{% extends 'base.html' %}
+
+{% block title %}Add List <Form></Form>{% endblock %}
+
+{% block content %}
+
+<form action="/lists/new" method="POST">
+    {{ form.hidden_tag() }}
+    
+    {% for field in form
+        if field.widget.input_type != 'hidden' %}
+
+   <div class="form-group">
+     {{ field.label }}
+     <br>
+     {{ field }}
+
+     {% for error in field.errors %}
+       {{ error }}
+     {% endfor %}
+   </div>
+
+ {% endfor %}
+ <button class="btn btn-small btn-success" type="submit">Add List</button>
+
+</form>
+
+{% endblock %}

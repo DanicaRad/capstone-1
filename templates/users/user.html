@@ -1,0 +1,35 @@
+{% extends 'base.html' %}
+{% block title %}Show User Profile Page{% endblock %}
+
+{% block content %}
+<div class="container">
+<div class="media" style="height: 200px">
+    <img id="profile-img" class="mr-3 img-thumbnail" src="{{ user.image_url }}" alt="user image">
+    <div class="media-body">
+      <h5 class="mt-0">{{ user.username }}</h5>
+      <p>USER BIO GOES HERE.</p>
+        {% if g.user.id == user.id %}
+            <a class="btn btn-sm" href="/users/profile">Edit Profile</a>
+        {% endif %}
+    </div>
+  </div>
+</div>
+
+<div class="container">
+    <div class="row">
+        <div class="col">
+            <h5>Lists</h5>
+            {% for list in user.lists %}
+            <a href="/lists/{{ list.id }}">{{ list.name }}</a>
+            {% endfor %}
+        </div>
+        <div class="col">
+            <h5>Favorites</h5>
+            {% for recipe in user.favorites %}
+            <a href="/recipes/{{ recipe.id }}">{{ recipe.title }}</a>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+
+{% endblock %}

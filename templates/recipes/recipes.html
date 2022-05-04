@@ -1,23 +1,54 @@
 {% extends 'base.html' %}
-{% block title %}Show recipe search results{% endblock %}
+{% block title %}Show Recipes Base Template{% endblock %}
 
 {% block content %}
 
-<h1>RECIPE</h1>
+{% if recipes %}
+<div class="row">
 
+{% for recipe in recipes %}
+<div class="col-sm-3 card-deck mb-3">
+<div class="card recipe-card">
+    <img class="card-img-top" src="{{ recipe.image_url }}" alt="Card image cap">
+    <div class="card-body">
+      <a href="{{ url_for('recipe_info', id=recipe.id) }}"><h5 class="card-title">{{ recipe.title }}</h5></a>
 
-    <h3>{{ recipe.title }}</h3>
-    <p><a href="{{ recipe.source_url }}">{{ recipe.source }}</a></p>
-    <p>{{ recipe.summary }}</p>
-    <p>{{ recipe.summary_long }}</p>
-    <ol>
-        {% for i in recipe.instructions %}
-        <li>{{ i }}</li>
-        {% endfor %}
-    </ol>
-    {% for ing in recipe.ingredients %}
-    <p>{{ ing.amount }} {{ ing.unit }} {{ ing.name }}</p>
-    <p>{{ ing.us }}</p>
-    <p>{{ ing.metric }}</p>
-    {% endfor %}
+        {% if g.user %}
+
+            <div class="row">
+                <form method="POST" class="add-recipe" action="">
+                    <button class="btn btn-sm btn-link heart">
+                    <span class="oi oi-heart
+                    {{'fav' if recipe in g.user.favorites else 'btn-link'}}" data-id="{{ recipe.id }}"></span>
+                    {% if recipe.favorites %}
+                        {{ recipe.favs() }}
+                    {% endif %}
+                    </button>
+
+                <div class="btn-group" id="lists-btn">
+                    <button type="button" class="btn btn-primary btn-sm dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false">save to
+                    </button>
+
+                    <ul class="dropdown-menu">
+                    {% for list in g.user.lists %}
+                    {% if not list.has_recipe(recipe.id) %}
+                        <li data-list="{{ list.id }}" data-recipe="{{ recipe.id }}" class="dropdown-item">
+                            {{ list.name }}</li>
+                    {% endif %}
+                    {% endfor %}
+                    </ul>
+                </div>
+                </form>
+            </div>
+            {% endif %}
+    </div>
+  </div>
+</div>
+{% endfor %}
+</div>
+
+    {% else %}
+    <p>Sorry, we couldn't find any recipes that matched.</p>
+{% endif %}
+    
 {% endblock %}

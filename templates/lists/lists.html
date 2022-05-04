@@ -1,0 +1,12 @@
+{% extends 'base.html' %}
+
+{% block title %}Show User's Lists{% endblock %}
+
+{% block content %}
+    {% for list in g.user.lists %}
+        <p><a href="/lists/{{ list.id }}">{{ list.name }}</a></p>
+        {% if list.description %}
+            <p>{{ list.description }}</p>
+        {% endif %}
+    {% endfor %}
+{% endblock %}

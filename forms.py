@@ -1,11 +1,11 @@
 """Forms for recipe search."""
 
 from flask_wtf import FlaskForm
-from wtforms import StringField, SelectField, SelectMultipleField, HiddenField, PasswordField
+from wtforms import StringField, SelectField, SelectMultipleField, HiddenField, PasswordField, TextAreaField, BooleanField
 from wtforms.validators import Optional, DataRequired, Email, Length
-from search_params import cuisines, intolerances, diets, type
+from search_params import cuisines, intolerances, diets, type, sort
 
-class AddUserForm(FlaskForm):
+class UserAddForm(FlaskForm):
     """Form for adding users."""
 
     username = StringField('Username', validators=[DataRequired()])
@@ -18,6 +18,24 @@ class LoginForm(FlaskForm):
 
     username = StringField('Username', validators=[DataRequired()])
     password = PasswordField('Password', validators=[Length(min=6)])
+
+class UserEditForm(UserAddForm):
+    """Form for editing user."""
+
+    image_url = StringField('(Optional) Image URL')
+    bio = TextAreaField('(Optional) Bio')
+
+class ListForm(FlaskForm):
+    """Form for users to make new list."""
+
+    name = StringField('List Name', validators=[DataRequired()])
+    description = TextAreaField('Description', validators=[Optional()])
+    private = BooleanField('Private', validators=[Optional()])
+
+class AddRecipeForm(FlaskForm):
+    """Form to add recipe to user list."""
+
+
 
 class SearchForm(FlaskForm):
     """Form for detailed recipe search"""
@@ -34,19 +52,21 @@ class SearchForm(FlaskForm):
     cuisine = SelectMultipleField(
                     'Cuisine',
                     choices=cuisines,
-                    validators=[Optional()],
-                    default=False)
+                    validators=[Optional()])
 
     intolerances = SelectMultipleField(
                     'Food Intolerances',
                     choices=intolerances,
-                    validators=[Optional()],
-                    default=False)
+                    validators=[Optional()])
 
     diet = SelectField(
                     'Diet',
                     choices=diets,
-                    validators=[Optional()],
-                    default=False)
+                    validators=[Optional()])
 
-    number = HiddenField('number', default="10")
+    sort = SelectField(
+                    'Sort By',
+                    choices=sort,
+                    validators=[Optional()])
+
+    number = HiddenField('number', default="1")

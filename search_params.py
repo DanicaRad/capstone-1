@@ -28,6 +28,7 @@ cuisines = [
 ]
 
 intolerances = [
+    "Intolerances",
     "dairy",
     "egg",
     "gluten",
@@ -43,6 +44,7 @@ intolerances = [
 ]
 
 diets = [
+    ("", "Diet"),
     ("glutenFree", "Gluten Free"),
     ("dairyFree", "Dairy Free"),
     ("ketogenic", "Keto"),
@@ -58,6 +60,7 @@ diets = [
 ]
 
 type = [
+    "Dish Type",
     "Main Course",
     "Side Dish",
     "Dessert",
@@ -73,4 +76,12 @@ type = [
     "Fingerfood",
     "Snack",
     "Drink"
+]
+
+sort = [
+    ("", "Sort By"),
+    ("popularity", "Most Popular"),
+    ("", "Most Relevant"),
+    ("healthiness", "Most Nutritious"),
+    ("random", "Surprise me!")
 ]

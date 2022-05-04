@@ -3,9 +3,44 @@
 {% block content %}
 
 {% if recipes %}
-    {% for recipe in recipes %}
-        <p><a href="/info/{{ recipe.id }}">{{ recipe.title }}</a></p>
-    {% endfor %}
+<div class="row">
+
+{% for recipe in recipes %}
+<div class="col-sm-3 card-deck mb-3">
+<div class="card">
+    <img class="card-img-top" src="{{ recipe.image_url }}" alt="Card image cap">
+    <div class="card-body">
+      <a href="{{ url_for('recipe_info', id=recipe.id) }}"><h5 class="card-title">{{ recipe.title }}</h5></a>
+
+      <div class="card-footer">
+        <form method="POST" action="{{ url_for('add_favorite', id=recipe.id) }}">
+            <button class="btn btn-sm btn-link
+            {{'fav' if recipe in g.user.favorites else 'btn-link'}}">
+            <span class="oi oi-heart"></span>
+          {% if recipe.favorites %}
+            {{ recipe.favs() }}
+          {% endif %}
+            </button>
+            <div class="btn-group list-btn">
+                <button type="button" class="btn btn-primary btn-sm dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false">save to
+                </button>
+                <ul class="dropdown-menu">
+                    <li><a class="dropdown-item" href="{{ url_for('add_favorite', id=recipe.id)}}">Add to Favorites</a></li>
+                    <li><hr class="dropdown-divider"></li>
+
+                {% for list in g.user.lists %}
+                {% if not list.has_recipe(recipe.id) %}
+                    <li data-list="{{ list.id }}" data-recipe="{{ recipe.id }}"><a class="dropdown-item" href="{{ url_for('add_to_list', r_id=recipe.id, l_id=list.id)}}">{{ list.name }}</a></li>
+                    {% endif %}
+                {% endfor %}
+                </ul>
+            </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endfor %}
+</div>
 
     {% else %}
     <p>Sorry, we couldn't find any recipes that matched.</p>

@@ -1,0 +1,24 @@
+{% extends 'base.html' %}
+
+{% block title %}Show Single List{% endblock %}
+
+{% block content %}
+
+<div id="list-image" class="full-width w-100 overflow-hidden position-relative"><img src="{{ list.image_url}}" alt="image for {{ list.name }}" class="vw-100">
+    <div id="list-header" class="position-absolute bottom-0">
+        <h2>{{ list.name }}</h2>
+        <p>{{ list.description }}</p>
+    </div>
+</div>
+
+<ul>
+    {% for recipe in list.recipes %}
+    <li class="list-recipes"><a href="{{ url_for('recipe_info', id=recipe.id) }}">{{ recipe.title }}</a>
+    <form class="delete-from-list">
+        <button data-recipe="{{ recipe.id }}" data-list="{{ list.id }}" class="btn btn-sm btn-danger">Remove</button>
+    </form>
+    </li>
+    {% endfor %}
+</ul>
+
+{% endblock %}

@@ -1,0 +1,56 @@
+{% extends 'base.html' %}
+{% block title %}Show Recipe Information{% endblock %}
+
+{% block content %}
+
+<h1>RECIPE</h1>
+
+    <h3>{{ recipe.title }}</h3>
+
+    {% if g.user %}
+
+    <div class="row">
+        <form method="POST" class="add-recipe" action="">
+            <button class="btn btn-sm btn-link heart">
+            <span class="oi oi-heart
+            {{'fav' if recipe in g.user.favorites else 'btn-link'}}" data-id="{{ recipe.id }}"></span>
+            {% if recipe.favorites %}
+                {{ recipe.favs() }}
+            {% endif %}
+            </button>
+
+        <div class="btn-group" id="lists-btn">
+            <button type="button" class="btn btn-primary btn-sm dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false">save to
+            </button>
+
+            <ul class="dropdown-menu">
+            {% for list in g.user.lists %}
+            {% if not list.has_recipe(recipe.id) %}
+                <li data-list="{{ list.id }}" data-recipe="{{ recipe.id }}" class="dropdown-item">
+                    {{ list.name }}</li>
+            {% endif %}
+            {% endfor %}
+            </ul>
+        </div>
+        </form>
+    </div>
+    {% endif %}
+
+    <p><a href="{{ recipe.source_url }}">{{ recipe.source }}</a></p>
+    <p>{{ recipe.summary }}</p>
+    <p>{{ recipe.summary_long }}</p>
+    <p>{{ recipe.instructions }}</p>
+    <ol>
+        {% for i in recipe.instructions.split(".") %}
+            <li>{{ i }}</li>
+        {% endfor %}
+    </ol>
+    {% for i in recipe.metric %}
+    <p>{{ i }}</p>
+    {% endfor %}
+
+    <p>{{ recipe.ingredients }}</p>
+    <p>{{ recipe.us }}</p>
+    <p>{{ recipe.metric }}</p>
+    
+{% endblock %}
