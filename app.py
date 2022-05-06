@@ -123,7 +123,7 @@ def logout():
 # General user routes:
 
 @app.route('/users/<int:id>/lists')
-def show_users_lists(id):
+def users_lists(id):
     """Shows user's own lists."""
 
     if g.user.id != id:
@@ -175,7 +175,9 @@ def favorites():
         flash("Access unauthorized", "danger")
         return redirect('/')
 
-    return render_template('users/favorites.html')
+    favorites = g.user.favorites
+
+    return render_template('users/favorites.html', recipes=favorites)
 
 ########################################################################
 # List routes:
@@ -213,7 +215,7 @@ def show_list(id):
         flash("Only the list creator can view this list.", "danger")
         return redirect('/')
 
-    return render_template('lists/list.html', user=g.user, list=list)
+    return render_template('lists/list-test.html', user=g.user, list=list)
 
 @app.route('/lists/<int:id>/delete', methods=['GET', 'POST'])
 def delete_list(id):
@@ -231,36 +233,6 @@ def delete_list(id):
     flash("List deleted", "warning")
     return redirect(f'/users/{g.user.id}/lists')
 
-# @app.route('/lists/<int:r_id>/<int:l_id>/delete', methods=['GET', 'POST'])
-# def delete_from_list(r_id, l_id):
-#     """Deletes recipe from list."""
-
-#     if not g.user:
-#         flash("Action unauthorized", "danger")
-#         return redirect(f'/lists/{l_id}')
-
-#     list = List.query.get_or_404(l_id)
-#     if list not in g.user.lists:
-#         flash("Unauthorized action", "danger")
-#         return redirect(f'/lists/{l_id}')
-
-#     recipe = Recipe.query.get_or_404(r_id)
-#     if recipe in list.recipes:
-
-#         recipe_list = RecipeList.query.filter(
-#             RecipeList.list_id == l_id,
-#             RecipeList.recipe_id == r_id).one()
-
-#         db.session.delete(recipe_list)
-#         db.session.commit()
-
-#         flash(f"Recipe removed from {list.name}")
-#         return redirect(f'/lists/{l_id}')
-        
-#     flash(f"Recipe not found in {list.name}", "warning")
-#     return redirect(f'/lists/{l_id}')
-
-########## TEST ##################
 
 # *********  Receives JS post request to delete recipe from list
 
@@ -310,31 +282,6 @@ def recipe_info(id):
 
     return render_template('recipes/recipe.html', recipe=recipe)
 
-# ***** Old add to list route before JS request written ***
-
-# @app.route('/recipes/<int:r_id>/<int:l_id>/add', methods=['GET', 'POST'])
-# def add_to_list(r_id, l_id):
-#     """Add recipe to user list."""
-
-#     if not g.user:
-#         flash("Action unauthorized", "danger")
-#         return redirect(request.referrer)
-
-#     list = List.query.get_or_404(l_id)
-
-#     if list.user_id != g.user.id:
-#         flash("Action unauthorized", "danger")
-#         return redirect(request.referrer)
-
-#     recipe = get_recipe(r_id)
-
-#     recipe_list = RecipeList(list_id=l_id, recipe_id=recipe.id)
-#     db.session.add(recipe_list)
-#     db.session.commit()
-
-#     flash(f"Recipe added to list!", "success")
-#     return redirect(request.referrer)
-
 ############ Adds to list from JS ppost request #################################
 
 @app.route('/recipes/add-to-list', methods=['GET', 'POST'])
@@ -348,11 +295,13 @@ def add_to_list():
     l_id = request.json['list']
 
     list = List.query.get_or_404(l_id)
+    recipe = get_recipe(r_id)
 
     if list.user_id != g.user.id:
         return(jsonify(message="Action unauthorized"), 202)
-
-    recipe = get_recipe(r_id)
+    
+    if recipe in list.recipes:
+        return(jsonify(message="Duplicate recipe."), 202)
 
     recipe_list = RecipeList(list_id=l_id, recipe_id=recipe.id)
     db.session.add(recipe_list)
@@ -361,27 +310,6 @@ def add_to_list():
     return(jsonify(message="Added to list!"), 200)
 
 #####################################################################
-
-# @app.route("/recipes/<int:id>/favorite", methods=["GET", "POST"])
-# def add_favorite(id):
-#     """Adds recipe to user favorites if not in favorites."""
-
-#     if not g.user:
-#         flash("You must be logged in or signup to add favorites", "danger")
-#         return redirect(request.referrer)
-
-#     recipe = get_recipe(id)
-
-#     if recipe in g.user.favorites:
-#         flash("This recipe is already in your favorites.")
-#         return redirect(f'/recipes/{id}')
-
-#     fav = Favorites(user_id=g.user.id, recipe_id=recipe.id)
-#     db.session.add(fav)
-#     db.session.commit()
-
-#     flash("Added to favorites!", "success")
-#     return redirect(request.referrer)
 
 @app.route("/recipes/favorite", methods=["GET", "POST"])
 def add_or_delete_favorite():
@@ -396,7 +324,7 @@ def add_or_delete_favorite():
 
     if recipe in g.user.favorites:
         fav = Favorites.query.filter(Favorites.user_id == g.user.id, Favorites.recipe_id == id).one()
-        print(f"********************************************* FAVORITE {fav} *********************************")
+
         db.session.delete(fav)
         db.session.commit()
 
@@ -409,7 +337,7 @@ def add_or_delete_favorite():
     return jsonify(("Added to favorites!"), 200)
 
 @app.route('/search', methods=["GET", "POST"])
-def show_search_form():
+def search_form():
     """Show search form. Remove previous search results from session."""
 
     session.pop('recipes', None)
@@ -418,8 +346,26 @@ def show_search_form():
 
     return render_template('search.html', form=form)
 
+def search_request(params):
+    """Sends search request to API. Clears recipes saved in session and saves API response in session."""
+
+    ## If recipes saved in session, clear ###
+    session.pop('recipes', None)
+
+    response = requests.get(
+                        f"{BASE_URL}/complexSearch?apiKey={API_KEY}",
+                        params)
+    resp = response.json()
+    recipes = resp['results']
+
+    ## Saves new search results to session ##
+    session['recipes'] = recipes
+
+    return [get_recipe(recipe['id']) for recipe in recipes]
+
+
 @app.route('/search/results', methods=['GET', 'POST'])
-def show_results():
+def detailed_search():
     """Shows search results, add results to session so user can return to results page."""
 
     form = SearchForm()
@@ -431,34 +377,43 @@ def show_results():
             "cuisine": form.cuisine.data,
             "intolerances": form.intolerances.data,
             "diet": form.diet.data,
-            "number": "10",
+            "number": "12",
             "sort": form.sort.data,
             "addRecipeInformation": "true"
         }
 
-        response = requests.get(
-                        f"{BASE_URL}/complexSearch?apiKey={API_KEY}",
-                        params)
-        resp = response.json()
-        results = resp['results']
-
-        recipes = [get_recipe(recipe['id']) for recipe in results]
-
-        session['recipes'] = results
+        recipes = search_request(params)
 
         return render_template('recipes/recipes.html', recipes=recipes)
     
-    results = session['recipes']
-    recipes = [ShortRecipe(recipe) for recipe in results]
+    ## if form not submitted, fetch saved recipes from session for recipes/recipes.hhtml rendering ##
+    saved_recipes = session['recipes']
+
+    recipes = [ShortRecipe(recipe) for recipe in saved_recipes]
     return render_template('recipes/recipes.html', recipes=recipes)
 
 
-@app.route('/search/test')
-def search_test():
+@app.route('/quick-search', methods=['GET', 'POST'])
+def quick_search():
+    """Handle quick search form from navbar."""
 
-    form = SearchForm()
+    if request.method == 'POST':
+        params = {
+                "query": request.form['query'],
+                "number": "12",
+                "sort": "meta-score",
+                "addRecipeInformation": "true"
+            }
 
-    return render_template('search-test.html', form=form)
+        recipes = search_request(params)
+
+        return render_template('recipes/recipes.html', recipes=recipes)
+    
+    ## if form not submitted, fetch saved recipes from session for recipes/recipes.hhtml rendering ##
+    saved_recipes = session['recipes']
+
+    recipes = [ShortRecipe(recipe) for recipe in saved_recipes]
+    return render_template('recipes/recipes.html', recipes=recipes)
 
 ########################################################################
 # Recipe routes and functions:
@@ -519,7 +474,6 @@ def homepage():
     return render_template('/recipes/recipes.html', recipes=recipes)  
 
 ############################################################################
-
 @app.after_request
 def add_header(req):
     """Add non-caching headers on every request."""
@@ -529,3 +483,4 @@ def add_header(req):
     req.headers["Expires"] = "0"
     req.headers['Cache-Control'] = 'public, max-age=0'
     return req  
+

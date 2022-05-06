@@ -80,6 +80,7 @@ type = [
 
 sort = [
     ("", "Sort By"),
+    ("meta-score", "Highest Rated"),
     ("popularity", "Most Popular"),
     ("", "Most Relevant"),
     ("healthiness", "Most Nutritious"),

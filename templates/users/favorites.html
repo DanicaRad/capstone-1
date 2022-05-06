@@ -1,14 +1,11 @@
-{% extends 'base.html' %}
+{% extends 'recipes/recipes.html' %}
 
 {% block title %}Show User's Favorites{% endblock %}
 
-{% block content %}
-<h1>Favorites</h1>
+{% block user_favorites %}
+<div class="mb-3 mt-3">
+<h1>{{ g.user.username }}'s Favorite Recipes</h1>
+</div>
 
-<ul>
-    {% for recipe in g.user.favorites %}
-    <li><a href="{{ url_for('recipe_info', id=recipe.id) }}">{{ recipe.title }}</a></li>
-    {% endfor %}
-</ul>
 
 {% endblock %}

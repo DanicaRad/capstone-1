@@ -88,13 +88,7 @@ class Recipe(db.Model):
 
     diets = db.Column(db.PickleType)
 
-    dairy_free = db.Column(db.Boolean, default=False)
-
-    gluten_free = db.Column(db.Boolean, default=False)
-    
-    vegetarian = db.Column(db.Boolean, default=False)
-
-    vegan = db.Column(db.Boolean, default=False)
+    tags = db.Column(db.PickleType)
 
     score = db.Column(db.Integer)
 
@@ -182,11 +176,12 @@ class Recipe(db.Model):
         """Removes HTML list tags and replaces with `.` for clean HTML list rendering."""
 
         no_l1 = res.replace(".</li>", ".")
-        no_l2 = no_l1.replace("</li>", ".")
+        no_l2 = no_l1.replace(".</ul>", ".")
         no_ol = no_l2.replace('.</ol', ".")
         no_ul = no_ol.replace('.<ul>', ".")
         no_els = no_ul.replace("...", ".")
-        no_p = no_els.replace(".)", ").")
+        no_pa = no_els.replace(".)", ").")
+        no_p = no_pa.replace("</p>", "")
         split = no_p.split('. ')
 
         str = ".".join([str for str in split if "<a" not in str and len(str) > 1])
@@ -218,14 +213,12 @@ class Recipe(db.Model):
     def get_tags(cls, res):
         """Get recipe tags."""
 
-        diets = {'dairyFree': 'Dairy Free',
+        tags = {'dairyFree': 'Dairy Free',
         'glutenFree': 'Gluten Free',
         'vegetarian': 'Vegetarian',
         'vegan': 'Vegan'}
 
-        tags = [diets[diet] for diet in diets if res[diet].casefold() == "true"]
-
-        return tags
+        return [tags[tag] for tag in tags if res[tag] == True]
 
     def favs(self):
         """Return number of `likes` or favorites recipe has."""

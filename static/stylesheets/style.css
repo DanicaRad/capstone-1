@@ -5,14 +5,19 @@ a {
 }
 
 /***** Recipes  ******************************/
-span.btn-link, .favs, button.heart {
-    text-decoration: none;
-}
 
 .fav {
     color: red;
 }
 
+.lists-btn, span.btn-link, .heart {
+    text-decoration: none;
+}
+
+.bi-heart, .bi-heart-fill {
+    color: red;
+    text-decoration: none;
+}
 
 
 /** Users **************************************/
@@ -31,14 +36,19 @@ span.btn-link, .favs, button.heart {
     opacity: 0.7;
     background-size: cover;
     background-position: center;
-  }
+}
 
 #list-header {
     padding: 10px;
+    color: black;
 }
 
 .list-recipes {
     list-style: none;
+}
+
+button.badge {
+    border: none;
 }
 
 /** Forms *************************************/

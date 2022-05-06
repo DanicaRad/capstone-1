@@ -36,7 +36,7 @@ async function searchRecipes() {
 // ************ LIST FUNCTIONS ***********************************
 
 // Event listener to trigger adding to list
-const listBtns = document.querySelectorAll('#lists-btn');
+const listBtns = document.querySelectorAll('.lists-btn');
 
 listBtns.forEach(btn => {
     btn.addEventListener("click", addRecipeToList)
@@ -45,6 +45,7 @@ listBtns.forEach(btn => {
 // gets recipe and list ID's, sends POST request to add to list
 async function addRecipeToList(e) {
     e.preventDefault();
+    console.log("addRecipeToList - only adds recipe to list")
     if(e.target.tagName == 'A') {
         const res = await axios({
             url:`${BASE_URL}/recipes/add-to-list`,
@@ -67,42 +68,45 @@ deleteBtn.forEach(btn => {
 async function deleteFromList(e) {
     e.preventDefault();
 
-    if(e.target.tagName == 'BUTTON') {
+    if(e.target.tagName == 'SPAN') {
 
         const res = await axios({
             url: `${BASE_URL}/lists/delete-from`,
             method: 'POST',
-            data: e.target.dataset
+            data: e.target.parentElement.dataset
         })
+
         if(res.status == 200) {
             console.log(res.data.message);
             console.log(e.target);
 
-            e.target.parentElement.parentElement.remove()
+            const recipe = e.target.dataset.recipe;
+            recipe.remove();
         }
     }
 }
 
-const addRecipe = document.querySelectorAll(".add-recipe")
+// const addRecipe = document.querySelectorAll(".add-recipe")
 
-addRecipe.forEach(recipe => {
-    recipe.addEventListener("click", getRequestData)
-})
+// addRecipe.forEach(recipe => {
+//     recipe.addEventListener("click", getRequestData)
+// })
 
-async function getRequestData(e) {
-    e.preventDefault();
+// async function getRequestData(e) {
+//     e.preventDefault();
 
-    const data = e.target.dataset
+//     console.log("getRequestData - adds to favs or list")
+//     const data = e.target.dataset
 
-    if(e.target.tagName == 'SPAN') {
-        sendPostRequest("recipes/favorite", data);
-        e.target.classList.toggle('fav');
-    }
+//     if(e.target.tagName == 'SPAN') {
+//         sendPostRequest("recipes/favorite", data);
+//         e.target.classList.toggle('fav');
+//     }
 
-    if(e.target.tagName == 'LI') {
-        sendPostRequest('recipes/add-to-list', data);
-    }
-}
+//     if(e.target.tagName == 'LI') {
+//         sendPostRequest('recipes/add-to-list', data);
+//     }
+// }
 
 async function sendPostRequest(endpoint, data) {
     const res = await axios({
@@ -111,6 +115,45 @@ async function sendPostRequest(endpoint, data) {
         data: data
     })
 
-    console.log(endpoint)
-    console.log(res)
+    console.log("res in sendpost", res)
+    console.log("res.status", res.status)
+    return res
+}
+
+recipeForm = document.querySelectorAll(".recipe-form")
+
+recipeForm.forEach(recipe => {
+    recipe.addEventListener("click", handleClick)
+})
+
+async function handleClick(e) {
+    e.preventDefault();
+
+    const data = e.target.dataset
+
+    if(e.target.id == 'heart') {
+        const res = await sendPostRequest("recipes/favorite", data);
+        if(res.status == 200) {
+            console.log("HEART RES STATUS", res.status)
+            e.target.classList.toggle('bi-heart');
+            e.target.classList.toggle('bi-heart-fill');
+        }
+    }
+
+    if(e.target.tagName == 'LI') {
+        const res = await sendPostRequest('recipes/add-to-list', data);
+        if(res.status == 200) {
+            e.target.remove();
+        }
+    }
+
+    if(e.target.id == 'trash') {
+
+        console.log("data recipe", data.recipe)
+        const res = await sendPostRequest('lists/delete-from', data);
+        if(res.status == 200) {
+            const recipe = document.getElementById(data.recipe)
+            recipe.remove();
+        }
+    }
 }

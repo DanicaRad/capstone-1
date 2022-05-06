@@ -37,13 +37,11 @@
         </p>
         <p>{{ recipe.summary[0:50] }}...</p>
             <div class="row-col-3">
-                <form class="delete-from-list">
-                    <button data-recipe="{{ recipe.id }}" data-list="{{ list.id }}" class="btn btn-link text-danger bi bi-trash"></button>
-                </form>
-                <form method="POST" class="add-recipe">
-                    <button class="btn btn-md btn-link heart">
-                    <span class="oi oi-heart
-                      {{'fav' if recipe in g.user.favorites else 'btn-link'}}" data-id="{{ recipe.id }}"></span>
+                <form class="recipe-form" method="POST">
+                    <button id="trash" data-recipe="{{ recipe.id }}" data-list="{{ list.id }}" class="btn btn-link text-danger bi bi-trash"></button>
+
+                    <button id="heart" class="btn btn-md btn-link bi
+                      {{'bi-heart-fill' if recipe in g.user.favorites else 'bi-heart'}}" data-id="{{ recipe.id }}">
                     {% if recipe.favorites %}
                         {{ recipe.favs() }}
                     {% endif %}

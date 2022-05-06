@@ -2,20 +2,21 @@
 {% block title %}Show User Profile Page{% endblock %}
 
 {% block content %}
-<div class="container">
-<div class="media" style="height: 200px">
-    <img id="profile-img" class="mr-3 img-thumbnail" src="{{ user.image_url }}" alt="user image">
-    <div class="media-body">
-      <h5 class="mt-0">{{ user.username }}</h5>
-      <p>USER BIO GOES HERE.</p>
-        {% if g.user.id == user.id %}
+<div class="container mt-3">
+    <div class="row">
+        <div class="col-sm-3" style="height: 200px">
+            <img id="profile-img" class="mr-3 img-thumbnail" src="{{ user.image_url }}" alt="user image">
+        </div>
+        <div class="col-sm-auto">
+            <h5 class="mt-0">{{ user.username }}</h5>
+            <p>USER BIO GOES HERE.</p>
+            {% if g.user.id == user.id %}
             <a class="btn btn-sm" href="/users/profile">Edit Profile</a>
-        {% endif %}
+            {% endif %}
+        </div>
     </div>
-  </div>
 </div>
 
-<div class="container">
     <div class="row">
         <div class="col">
             <h5>Lists</h5>
@@ -30,6 +31,5 @@
             {% endfor %}
         </div>
     </div>
-</div>
 
 {% endblock %}

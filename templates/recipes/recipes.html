@@ -3,6 +3,12 @@
 
 {% block content %}
 
+{% block filter_recipes %}
+{% endblock %}
+
+{% block user_favorites %}
+{% endblock %}
+
 {% if recipes %}
 <div class="row">
 
@@ -12,32 +18,39 @@
     <img class="card-img-top" src="{{ recipe.image_url }}" alt="Card image cap">
     <div class="card-body">
       <a href="{{ url_for('recipe_info', id=recipe.id) }}"><h5 class="card-title">{{ recipe.title }}</h5></a>
+      <p>
+        <span class="badge rounded-pill bg-success">{{ recipe.score }}%</span>
+          {% for tag in recipe.tags %}
+          <span class="badge bg-light text-dark">{{ tag }}</span>
+          {% endfor %}
+      </p>
+      <p>{{ recipe.summary[0:50] }}...</p>
 
         {% if g.user %}
 
             <div class="row">
-                <form method="POST" class="add-recipe" action="">
-                    <button class="btn btn-sm btn-link heart">
-                    <span class="oi oi-heart
-                    {{'fav' if recipe in g.user.favorites else 'btn-link'}}" data-id="{{ recipe.id }}"></span>
+                <form class="recipe-form" method="POST">
+
+                    <button id="heart" class="btn btn-md btn-link bi
+                      {{'bi-heart-fill' if recipe in g.user.favorites else 'bi-heart'}}" data-id="{{ recipe.id }}">
                     {% if recipe.favorites %}
                         {{ recipe.favs() }}
                     {% endif %}
                     </button>
-
-                <div class="btn-group" id="lists-btn">
-                    <button type="button" class="btn btn-primary btn-sm dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false">save to
-                    </button>
-
-                    <ul class="dropdown-menu">
-                    {% for list in g.user.lists %}
-                    {% if not list.has_recipe(recipe.id) %}
-                        <li data-list="{{ list.id }}" data-recipe="{{ recipe.id }}" class="dropdown-item">
-                            {{ list.name }}</li>
-                    {% endif %}
-                    {% endfor %}
-                    </ul>
-                </div>
+  
+                    <div class="btn-group" class="lists-btn">
+                        <button type="button" class="btn btn-link btn-sm text-decoration-none dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false"><span class="oi oi-plus"></span>
+                        </button>
+                        <ul class="dropdown-menu">
+                        {% for list in g.user.lists %}
+                            {% if not list.has_recipe(recipe.id) %}
+                            <li data-list="{{ list.id }}" data-recipe="{{ recipe.id }}" class="dropdown-item">
+                              {{ list.name }}
+                            </li>
+                            {% endif %}
+                        {% endfor %}
+                        </ul>
+                    </div>
                 </form>
             </div>
             {% endif %}

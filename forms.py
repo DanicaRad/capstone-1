@@ -67,6 +67,5 @@ class SearchForm(FlaskForm):
     sort = SelectField(
                     'Sort By',
                     choices=sort,
-                    validators=[Optional()])
-
-    number = HiddenField('number', default="1")
+                    validators=[Optional()],
+                    default="meta-score")

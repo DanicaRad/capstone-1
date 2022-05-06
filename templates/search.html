@@ -6,7 +6,7 @@
     <div class="col-md-8 col-lg-8">
       <h2 class="join-message">It's ok to be picky.</h2>
 
-      <form method="POST" action="{{ url_for('show_results') }}">
+      <form method="POST" action="{{ url_for('detailed_search') }}">
         {{ form.hidden_tag() }}
 
         {% for field in form if field.widget.input_type != 'hidden' %}
