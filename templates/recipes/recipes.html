@@ -30,16 +30,15 @@
 
             <div class="row">
                 <form class="recipe-form" method="POST">
-
-                    <button id="heart" class="btn btn-md btn-link bi
-                      {{'bi-heart-fill' if recipe in g.user.favorites else 'bi-heart'}}" data-id="{{ recipe.id }}">
-                    {% if recipe.favorites %}
-                        {{ recipe.favs() }}
-                    {% endif %}
+                    <button id="heart" class="btn btn-lg btn-link bi bi-heart-fill
+                      {{'fav' if recipe in g.user.favorites else 'not-fav'}}" data-id="{{ recipe.id }}">
+                    <!-- {% if recipe.favorites %} -->
+                        <!-- <span class="fav-count">{{ recipe.favs() }}</span> -->
+                    <!-- {% endif %} -->
                     </button>
   
-                    <div class="btn-group" class="lists-btn">
-                        <button type="button" class="btn btn-link btn-sm text-decoration-none dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false"><span class="oi oi-plus"></span>
+                    <div class="btn-group lists-btn">
+                        <button type="button" class="btn btn-secondary btn-sm text-decoration-none dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false">Save <span class="oi oi-book"></span>
                         </button>
                         <ul class="dropdown-menu">
                         {% for list in g.user.lists %}
@@ -47,6 +46,7 @@
                             <li data-list="{{ list.id }}" data-recipe="{{ recipe.id }}" class="dropdown-item">
                               {{ list.name }}
                             </li>
+                            {% else %}
                             {% endif %}
                         {% endfor %}
                         </ul>

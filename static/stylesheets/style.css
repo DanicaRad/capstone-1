@@ -6,17 +6,32 @@ a {
 
 /***** Recipes  ******************************/
 
+.card-image-top {
+    opacity: 50%;
+}
+
 .fav {
-    color: red;
+    color: coral;
 }
 
-.lists-btn, span.btn-link, .heart {
-    text-decoration: none;
+.not-fav {
+    color: white;
 }
 
-.bi-heart, .bi-heart-fill {
-    color: red;
+#heart {
     text-decoration: none;
+    padding: 0 .25rem;
+    position: absolute;
+    top: 0;
+    right: 0;
+}
+
+#heart:hover {
+    color: chocolate;
+}
+
+.oi-book {
+    padding-left: .5rem;
 }
 
 
@@ -25,6 +40,8 @@ a {
 #profile-img {
     width: 200px;
     height: 200px;
+    border-radius: 100%;
+    border: 5px solid grey;
 }
 
 
@@ -45,6 +62,10 @@ a {
 
 .list-recipes {
     list-style: none;
+}
+
+.list-thumb {
+    width: 10rem;
 }
 
 button.badge {

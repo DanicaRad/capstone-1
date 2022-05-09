@@ -10,8 +10,6 @@
     <link rel="stylesheet" href="/static/stylesheets/style.css">
     <title>{% block title %}{% endblock %}</title>
 </head>
-<!-- 
-search<span class="oi oi-magnifying-glass"></span> -->
 
 <body>
     <nav class="navbar navbar-expand-lg navbar-light bg-light">
@@ -60,33 +58,6 @@ search<span class="oi oi-magnifying-glass"></span> -->
                     <button class="btn btn-outline-secondary bi bi-search" type="button" id="quick-search"></button>
                   </div>
             </form>
-<!-- double button search form  -->
-<!-- 
-            <form class="d-flex">
-                <div class="input-group">
-                <input type="text" class="form-control" placeholder="Search" aria-label="query">
-                <button class="btn btn-outline-secondary" type="button"><span class="oi oi-magnifying-glass"></span></button>
-                <button class="btn btn-outline-secondary" type="button">Detailed Search</button>
-                </div>
-            </form> -->
-
-<!-- NEW SEARCH FORM  -->
-        
-            <!-- <form class="d-flex">
-            <div class="input-group mb-3">
-                <input type="text" class="form-control" aria-label="Text input with dropdown button">
-                <button class="btn btn-outline-secondary dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">Dropdown</button>
-                <ul class="dropdown-menu dropdown-menu-end">
-                  <li><a class="dropdown-item" href="#">Action</a></li>
-                  <li><a class="dropdown-item" href="#">Another action</a></li>
-                  <li><a class="dropdown-item" href="#">Something else here</a></li>
-                  <li><hr class="dropdown-divider"></li>
-                  <li><a class="dropdown-item" href="#">Separated link</a></li>
-                </ul>
-            </div>
-            </form> -->
-
-
           </div>
         </div>
       </nav>
@@ -94,6 +65,7 @@ search<span class="oi oi-magnifying-glass"></span> -->
         {% for category, message in get_flashed_messages(with_categories=True) %}
             <div class="alert alert-{{ category }}">{{ message }}</div>
         {% endfor %}
+        <div id="js-alert" class="alert"></div>
 
     {% block content %}
     {% endblock %}

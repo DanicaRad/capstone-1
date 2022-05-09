@@ -56,7 +56,8 @@ class Recipe(db.Model):
 
     id = db.Column(
         db.Integer,
-        primary_key=True
+        primary_key=True,
+        unique=True
     )
 
     title = db.Column(
@@ -102,7 +103,7 @@ class Recipe(db.Model):
     favorites = db.relationship("Favorites")
 
     def __repr__(self):
-        return f"<# {self.id}, title: {self.title}>"
+        return f"<# {self.id} title: {self.title}>"
 
     @classmethod
     def make_recipe(cls, res):
@@ -294,6 +295,8 @@ class User(db.Model):
         nullable=False,
         unique=True
     )
+
+    bio = db.Column(db.Text)
 
     image_url = db.Column(
         db.Text,

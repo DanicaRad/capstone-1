@@ -1,16 +1,13 @@
 """Test for checking out API responses"""
 
 import os
-from re import L
-from webbrowser import get
 
 from flask import Flask, render_template, request, flash, redirect, jsonify, session, g
-import pdb
 import requests
 import random
 from flask_debugtoolbar import DebugToolbarExtension
 from sqlalchemy.exc import IntegrityError
-from site_models import APIRecipe, ShortRecipe
+from site_models import ShortRecipe
 from forms import ListForm, SearchForm, UserAddForm, LoginForm, UserAddForm, UserEditForm
 from models import db, connect_db, User, List, Recipe, RecipeList, Favorites
 
@@ -86,6 +83,7 @@ def signup():
 
         do_login(user)
 
+        flash(f"Welcome {user.username}!")
         return redirect("/")
 
     else:
@@ -104,7 +102,8 @@ def login():
         if user:
             do_login(user)
             flash(f"Hello, {user.username}!", "success")
-            return redirect("/")
+            return redirect(f"/users/{user.id}")
+# *******************************************************************
 
         flash("Invalid credentials.", 'danger')
 
@@ -119,18 +118,8 @@ def logout():
 
     return redirect('/login')
 
-########################################################################
+######################################################################
 # General user routes:
-
-@app.route('/users/<int:id>/lists')
-def users_lists(id):
-    """Shows user's own lists."""
-
-    if g.user.id != id:
-        flash("Access unauthorized", "danger")
-        return redirect('/')
-
-    return render_template('/lists/lists.html')
 
 @app.route('/users/<int:id>')
 def show_user(id):
@@ -146,24 +135,27 @@ def profile():
 
     if not g.user:
         flash("Access unauthorized", "danger")
-        return redirect('/')
+        return redirect('/signup')
+        ######################################################
 
     form = UserEditForm()
     if form.validate_on_submit():
         if User.authenticate(g.user.username, form.password.data):
             g.user.username = form.username.data
             g.user.email = form.email.data
+            g.user.bio = form.bio.data
             g.user.image_url = form.image_url.data if form.image_url.data else g.user.image_url
 
             db.session.add(g.user)
             db.session.commit()
 
             flash("Profile updated!", "success")
-            return redirect('/users/home')
+            return redirect(f'/users/{g.user.id}')
 
         else:
             flash("Acces unauthroized; incorrect password.")
-            return redirect('/users/home')
+            return redirect('/signup')
+            #####################################################
 
     return render_template('users/profile.html', form=form)
 
@@ -204,22 +196,33 @@ def add_list():
 
     return render_template('lists/form.html', form=form)
 
+@app.route('/users/<int:id>/lists')
+def users_lists(id):
+    """Shows user's own lists."""
+
+    if not g.user or g.user.id != id:
+        flash("Access unauthorized", "danger")
+        return redirect('/signup')
+    #################################################
+
+    return render_template('/lists/lists.html')
+
 @app.route('/lists/<int:id>')
 def show_list(id):
     """Shows recipelist if list user is curr_user."""
 
     list = List.query.get_or_404(id)
 
-    if list not in g.user.lists and list.private == True:
+    if not g.user and list.private == True or list.private == True and list.user_id != g.user.id:
 
-        flash("Only the list creator can view this list.", "danger")
+        flash("This list is private.", "danger")
         return redirect('/')
 
-    return render_template('lists/list-test.html', user=g.user, list=list)
+    return render_template('lists/list.html', list=list)
 
 @app.route('/lists/<int:id>/delete', methods=['GET', 'POST'])
 def delete_list(id):
-    """Delete's user list"""
+    """Delete's user list in list.html"""
 
     list = List.query.get_or_404(id)
 
@@ -232,6 +235,21 @@ def delete_list(id):
 
     flash("List deleted", "warning")
     return redirect(f'/users/{g.user.id}/lists')
+
+@app.route('/lists/delete', methods=['GET', 'POST'])
+def delete_list_from_lists():
+    """Handles axios post request to delete list from lists in lists.html."""
+
+    id = request.json['id']
+    list = List.query.get_or_404(id)
+
+    if not g.user or list.user_id != g.user.id:
+        return (jsonify(message="Access unauthorized"), 202)
+
+    db.session.delete(list)
+    db.session.commit()
+
+    return (jsonify(message="List Deleted"), 200)
 
 
 # *********  Receives JS post request to delete recipe from list
@@ -265,28 +283,9 @@ def delete_from_list():
         
     return (jsonify(message="Recipe not found in list"), 202)
 
-
-
-
-
-########################################################################
-########################################################################
-########################################################################
-# Test draft routes:
-
-@app.route('/recipes/<int:id>', methods=['GET', 'POST'])
-def recipe_info(id):
-    """Get and show recipe meta information from API."""
-
-    recipe = get_recipe(id)
-
-    return render_template('recipes/recipe.html', recipe=recipe)
-
-############ Adds to list from JS ppost request #################################
-
 @app.route('/recipes/add-to-list', methods=['GET', 'POST'])
 def add_to_list():
-    """Add recipe to user list."""
+    """Add recipe to user list from axios request."""
 
     if not g.user:
         return(jsonify(message="Action unauthorized"), 202)
@@ -309,11 +308,21 @@ def add_to_list():
 
     return(jsonify(message="Added to list!"), 200)
 
+
 #####################################################################
+######################################################################### Recipe routes:
+
+@app.route('/recipes/<int:id>', methods=['GET', 'POST'])
+def recipe_info(id):
+    """Get and show recipe meta information from API."""
+
+    recipe = get_recipe(id)
+
+    return render_template('recipes/recipe.html', recipe=recipe)
 
 @app.route("/recipes/favorite", methods=["GET", "POST"])
 def add_or_delete_favorite():
-    """Adds recipe to user favorites if not in favorites."""
+    """Adds recipe to user favorites if not in favorites from axios request. Returns json."""
 
     if not g.user:
         return (jsonify(message="You must be logged in or signup to add favorites"), 202)
@@ -328,13 +337,13 @@ def add_or_delete_favorite():
         db.session.delete(fav)
         db.session.commit()
 
-        return (jsonify(message="Removed from favorites."), 200)
+        return (jsonify(message="Removed from favorites"), 200)
 
     newfav = Favorites(user_id=g.user.id, recipe_id=id)
     db.session.add(newfav)
     db.session.commit()
 
-    return jsonify(("Added to favorites!"), 200)
+    return (jsonify(message="Added to favorites!"), 200)
 
 @app.route('/search', methods=["GET", "POST"])
 def search_form():
@@ -415,8 +424,7 @@ def quick_search():
     recipes = [ShortRecipe(recipe) for recipe in saved_recipes]
     return render_template('recipes/recipes.html', recipes=recipes)
 
-########################################################################
-# Recipe routes and functions:
+######################################################################### Recipe functions:
 
 def get_random_recipes(num):
     """Get num number of random recipes"""
@@ -452,8 +460,7 @@ def get_recipe(id):
     return recipe
 
 
-########################################################################
-# Homepage and errors:
+######################################################################### Homepage and errors:
 
 @app.route('/')
 def homepage():
@@ -474,6 +481,7 @@ def homepage():
     return render_template('/recipes/recipes.html', recipes=recipes)  
 
 ############################################################################
+
 @app.after_request
 def add_header(req):
     """Add non-caching headers on every request."""

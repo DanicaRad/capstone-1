@@ -3,32 +3,30 @@
 {% block title %}Show User's Lists{% endblock %}
 
 {% block content %}
-    {% for list in g.user.lists %}
-        <p><a href="/lists/{{ list.id }}">{{ list.name }}</a></p>
-        {% if list.description %}
-            <p>{{ list.description }}</p>
-        {% endif %}
-    {% endfor %}
 
-<div class="row row-cols-2 g-3">
-{% for list in g.user.lists %}
-    <div class="col-6">
-    <div class="card m-3" style="max-width: 540px;">
-        <div class="row g-0">
-          <div class="col-md-4">
-            <img src="{{ list.image_url}}" class="img-fluid rounded-start" alt="recipe list image">
-          </div>
-          <div class="col-md-8">
-            <div class="card-body">
-              <a href="{{ url_for('show_list', id=list.id) }}"><h5 class="card-title">{{ list.name }}</h5></a>
-              <p class="card-text">{{ list.description }}</p>
-              <p class="card-text"><small class="text-muted">Last updated 3 mins ago</small></p>
-            </div>
-          </div>
+<div class="row row-cols-1 row-cols-md-3 g-4">
+    {% for list in g.user.lists %}
+  <div class="col" id="{{ list.id }}">
+    <div class="card" style="width: 18rem;">
+        <img src="{{ list.image_url }}" class="card-img-top" alt="recipe list image">
+        <div class="card-body">
+          <a href="{{ url_for('show_list', id=list.id) }}"><h5 class="card-title">{{ list.name }}</h5></a>
+          <p class="card-text">{{ list.description }}</p>
+        </div>
+        <ul class="list-group list-group-flush">
+            {% for recipe in list.recipes %}
+          <li class="list-group-item"><a href="{{ url_for('recipe_info', id=recipe.id) }}">{{ recipe.title }}</a></li>
+          {% endfor %}
+        </ul>
+        <div class="card-body">
+            <form class="delete-list" method="POST">
+                <button id="trash" data-id="{{ list.id }}" class="btn btn-link text-danger bi bi-trash"></button>
+            </form>
         </div>
     </div>
-    </div>
-{% endfor %} 
+  </div>
+  {% endfor %}
 </div>
+
 
 {% endblock %}
