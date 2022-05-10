@@ -30,7 +30,7 @@ class UserViewsTestCase(TestCase):
         Favorites.query.delete()
         RecipeList.query.delete()
         List.query.delete()
-        Recipe.query.delete()
+        Recipe.query.filter(Recipe.id == 1).delete()
         User.query.delete()
 
         self.client = app.test_client()
@@ -41,14 +41,6 @@ class UserViewsTestCase(TestCase):
             password="testuser",
             image_url=User.image_url.default.arg)
 
-        self.recipe = Recipe(
-            id=1,
-            title="Test Recipe",
-            summary="Summary"
-        )
-
-        db.session.add(self.recipe)
-        db.session.add(self.testuser)
         db.session.commit()
 
         self.testlist = List(
@@ -73,6 +65,28 @@ class UserViewsTestCase(TestCase):
         """Cleanup any fouled transactions."""
 
         db.session.rollback()
+
+    def test_anon_home_view(self):
+        """Test if new user is directs to signup on homepage."""
+
+        resp = self.client.get("/", follow_redirects=True)
+        html = resp.get_data(as_text=True)
+
+        self.assertEqual(resp.status_code, 200)
+        self.assertIn("Signup", html)
+
+    def test_loggedin_home_view(self):
+        """Test random recipes shown in logged in user home view."""
+
+        with self.client as c:
+            with c.session_transaction() as sess:
+                sess[CURR_USER_KEY] = self.testuser.id
+
+            resp = c.get("/", follow_redirects=True)
+            html = resp.get_data(as_text=True)
+
+            self.assertEqual(resp.status_code, 200)
+            self.assertIn("Save", html)
 
     def test_view_signup_form(self):
         """Does user signup form show if no logged in user?"""
@@ -228,14 +242,13 @@ class UserViewsTestCase(TestCase):
     #     with self.client as c:
     #         with c.session_transaction() as sess:
     #             sess[CURR_USER_KEY] = self.testuser.id
-    #             sess['recipes'] = {'id': f"{self.recipe.id}",
-    #                             'title': f"{self.recipe.title}",
-    #                             'summary': f"{self.recipe.summary}"}
 
-    #         resp = c.post("/recipes/favorite", data={"id": f"{self.recipe.id}"})
+    #         header = {"Content-Type": "application/json", "Referrer": "/", "Cookie": f"session={sess}"}
 
-    #         self.assertEqual(len(self.testuser.favorites), 1)
-    #         self.assertIn(self.recipe, self.testuser.favorites)
+    #         resp = c.post("/recipes/favorite", headers=header, data={"id": "1"})
+
+    #         self.assertEqual(resp.status_code, 200)
+
 
     def test_create_list_form_view(self):
         """Test view for user to create a new list form."""

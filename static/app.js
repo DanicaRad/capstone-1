@@ -31,7 +31,7 @@ async function handleClick(e) {
 
     const data = e.target.dataset
 
-    if(e.target.id == 'heart') {
+    if(e.target.classList.contains('bi-heart-fill')) {
         const res = await sendPostRequest("recipes/favorite", data);
         if(res.status == 200) {
             e.target.classList.toggle('not-fav');

@@ -47,15 +47,19 @@ a {
 
 /** Lists *************************************/
 
-#list-image {
+#list-header, #recipe-header {
     height: 360px;
     margin-top: 0px;
-    opacity: 0.7;
+    /* opacity: 0.7; */
     background-size: cover;
     background-position: center;
 }
 
-#list-header {
+#list-image, #recipe-image {
+    opacity: 0.6;
+}
+
+#list-heading, #recipe-heading {
     padding: 10px;
     color: black;
 }

@@ -4,6 +4,8 @@
 
 {% block content %}
 
+<h3>Recipe Lists</h3>
+
 <div class="row row-cols-1 row-cols-md-3 g-4">
     {% for list in g.user.lists %}
   <div class="col" id="{{ list.id }}">

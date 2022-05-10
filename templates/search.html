@@ -15,9 +15,7 @@
             {% endfor %}
 
             {% if field.type == 'StringField' %}
-            <!-- <div class="form-floating mb-3"> -->
                 {{ field(placeholder="Search", class="form-control") }}
-            <!-- </div> -->
 
             {% else %}
             {{ field.label(class="invisible") }}

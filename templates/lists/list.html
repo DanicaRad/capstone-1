@@ -4,11 +4,11 @@
 
 {% block content %}
 
-<div id="list-image" class="full-width w-100 overflow-hidden position-relative mb-3"><img src="{{ list.image_url}}" alt="image for {{ list.name }}" class="vw-100">
-    <div id="list-header" class="position-absolute bottom-0">
+<div id="list-header" class="full-width w-100 overflow-hidden position-relative mb-3"><img src="{{ list.image_url}}" alt="image for {{ list.name }}" class="vw-100" id="list-image">
+    <div id="list-heading" class="position-absolute bottom-0">
         <h2>{{ list.name }}</h2>
         <p>{{ list.description }}</p>
-        <button class="btn btn-sm btn-link-danger p-0"><a href="{{ url_for('delete_list', id=list.id) }}">Delete list</a></button>
+        <button class="btn btn-sm btn-link p-0"><a href="{{ url_for('delete_list', id=list.id) }}">Delete list</a></button>
     </div>
 </div>
 

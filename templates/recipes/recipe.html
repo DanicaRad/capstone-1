@@ -3,65 +3,74 @@
 
 {% block content %}
 
-
-<div class="row row-cols-auto mt-3">
-    <div class="col">
-    <h3>{{ recipe.title }}</h3>
-    </div>
-
-    <div class="col">
+<div id="recipe-header" class="full-width w-100 overflow-hidden position-relative mb-3"><img src="{{ recipe.image_url}}" alt="image for {{ recipe.title }}" class="vw-100" id="recipe-image">
+    <div id="recipe-heading" class="position-absolute bottom-0">
+        <h2>{{ recipe.title }}</h2>
         {% if g.user %}
+        <form method="POST" class="recipe-form">
+            <button class="btn btn-lg btn-link bi bi-heart-fill
+                  {{'fav' if recipe in g.user.favorites else 'not-fav'}}" data-id="{{ recipe.id }}">
+                <!-- {% if recipe.favorites %} -->
+                    <!-- <span class="fav-count">{{ recipe.favs() }}</span> -->
+                <!-- {% endif %} -->
+            </button>
+        <div class="btn-group" class="lists-btn">
+            <button type="button" class="btn btn-secondary btn-sm text-decoration-none dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false">Save <span class="oi oi-book"></span>
+            </button>
 
-        <div class="row">
-            <form method="POST" class="add-recipe">
-                <button class="btn btn-lg btn-link heart p-0">
-                <span class="oi oi-heart 
-                {{'fav' if recipe in g.user.favorites else 'btn-link'}}" data-id="{{ recipe.id }}"></span>
-                {% if recipe.favorites %}
-                    <span class="fw-lighter fs-6">{{ recipe.favs() }}</span>
-                {% endif %}
-                </button>
-            <div class="btn-group" class="lists-btn">
-                <button type="button" class="btn btn-link btn-md text-decoration-none dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false"><span class="oi oi-plus"></span>
-                </button>
-    
-                <ul class="dropdown-menu">
-                {% for list in g.user.lists %}
-                {% if not list.has_recipe(recipe.id) %}
-                    <li data-list="{{ list.id }}" data-recipe="{{ recipe.id }}" class="dropdown-item">
-                        {{ list.name }}
-                    </li>
-                {% endif %}
-                {% endfor %}
-                </ul>
-            </div>
-            </form>
+            <ul class="dropdown-menu">
+            {% for list in g.user.lists %}
+            {% if not list.has_recipe(recipe.id) %}
+                <li data-list="{{ list.id }}" data-recipe="{{ recipe.id }}" class="dropdown-item">
+                    {{ list.name }}
+                </li>
+            {% endif %}
+            {% endfor %}
+            </ul>
         </div>
+        </form>
         {% endif %}
     </div>
 </div>
+
 <p>
+{% if recipe.score %}
     <span class="badge rounded-pill bg-success">{{ recipe.score }}%</span>
-{% for tag in recipe.tags %}
-    <span class="badge bg-light text-dark">{{ tag }}</span>
-{% endfor %}
-</p>
-
-    <p><a href="{{ recipe.source_url }}">{{ recipe.source }}</a></p>
-    <p>{{ recipe.summary }}</p>
-    <p>{{ recipe.summary_long }}</p>
-    <p>{{ recipe.instructions }}</p>
-    <ol>
-        {% for i in recipe.instructions.split(".") %}
-            <li>{{ i }}</li>
-        {% endfor %}
-    </ol>
-    {% for i in recipe.metric %}
-    <p>{{ i }}</p>
+{% endif %}
+{% if recipe.tags %}
+    {% for tag in recipe.tags %}
+        <span class="badge bg-light text-dark">{{ tag }}</span>
     {% endfor %}
+{% endif %}
+</p>
+{% if recipe.source_url %}
+    <p><a href="{{ recipe.source_url }}">{{ recipe.source }}</a></p>
+{% endif %}
+{% if recipe.summary %}
+    <p>{{ recipe.summary }}</p>
+{% endif %}
 
-    <p>{{ recipe.ingredients }}</p>
-    <p>{{ recipe.us }}</p>
-    <p>{{ recipe.metric }}</p>
+<div class="row row-cols-2">
+    <div class="col">
+    {% if recipe.ingredients %}
+    <h5>Ingredients</h5>
+        {% for i in recipe.us %}
+        <p>{{ i }}</p>
+        {% endfor %}
+    {% endif %}
+    </div>
+    <div class="col">
+    {% if recipe.instructions %}
+    <h5>Instructions</h5>
+        <ol>
+            {% for i in recipe.instructions.split(".") %}
+            {% if i| length > 1 %}
+                <li>{{ i }}</li>
+            {% endif %}
+            {% endfor %}
+        </ol>
+    {% endif %}
+    </div>
+</div>
     
 {% endblock %}

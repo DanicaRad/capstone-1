@@ -102,8 +102,7 @@ def login():
         if user:
             do_login(user)
             flash(f"Hello, {user.username}!", "success")
-            return redirect(f"/users/{user.id}")
-# *******************************************************************
+            return redirect("/")
 
         flash("Invalid credentials.", 'danger')
 
@@ -135,8 +134,7 @@ def profile():
 
     if not g.user:
         flash("Access unauthorized", "danger")
-        return redirect('/signup')
-        ######################################################
+        return redirect('/login')
 
     form = UserEditForm()
     if form.validate_on_submit():
@@ -154,8 +152,7 @@ def profile():
 
         else:
             flash("Acces unauthroized; incorrect password.")
-            return redirect('/signup')
-            #####################################################
+            return redirect('/login')
 
     return render_template('users/profile.html', form=form)
 
@@ -202,8 +199,7 @@ def users_lists(id):
 
     if not g.user or g.user.id != id:
         flash("Access unauthorized", "danger")
-        return redirect('/signup')
-    #################################################
+        return redirect(f'/login')
 
     return render_template('/lists/lists.html')
 
@@ -236,9 +232,11 @@ def delete_list(id):
     flash("List deleted", "warning")
     return redirect(f'/users/{g.user.id}/lists')
 
+########################################################################### AXIOS post request List routes
+
 @app.route('/lists/delete', methods=['GET', 'POST'])
 def delete_list_from_lists():
-    """Handles axios post request to delete list from lists in lists.html."""
+    """Handles axios post request to delete list from lists in lists.html. Return json."""
 
     id = request.json['id']
     list = List.query.get_or_404(id)
@@ -251,12 +249,9 @@ def delete_list_from_lists():
 
     return (jsonify(message="List Deleted"), 200)
 
-
-# *********  Receives JS post request to delete recipe from list
-
 @app.route('/lists/delete-from', methods=['GET', 'POST'])
 def delete_from_list():
-    """Deletes recipe from list."""
+    """Deletes recipe from list from axios post request. Returns json."""
 
     if not g.user:
         return (jsonify(message="Action unauthorized"), 202)
@@ -285,7 +280,7 @@ def delete_from_list():
 
 @app.route('/recipes/add-to-list', methods=['GET', 'POST'])
 def add_to_list():
-    """Add recipe to user list from axios request."""
+    """Add recipe to user list from axios request. Returns json."""
 
     if not g.user:
         return(jsonify(message="Action unauthorized"), 202)
@@ -308,17 +303,7 @@ def add_to_list():
 
     return(jsonify(message="Added to list!"), 200)
 
-
-#####################################################################
-######################################################################### Recipe routes:
-
-@app.route('/recipes/<int:id>', methods=['GET', 'POST'])
-def recipe_info(id):
-    """Get and show recipe meta information from API."""
-
-    recipe = get_recipe(id)
-
-    return render_template('recipes/recipe.html', recipe=recipe)
+########################################################################### AXIOS post request Recipe routes
 
 @app.route("/recipes/favorite", methods=["GET", "POST"])
 def add_or_delete_favorite():
@@ -344,6 +329,17 @@ def add_or_delete_favorite():
     db.session.commit()
 
     return (jsonify(message="Added to favorites!"), 200)
+
+#####################################################################
+######################################################################### Recipe routes:
+
+@app.route('/recipes/<int:id>', methods=['GET', 'POST'])
+def recipe_info(id):
+    """Get and show recipe meta information from API."""
+
+    recipe = get_recipe(id)
+
+    return render_template('recipes/recipe.html', recipe=recipe)
 
 @app.route('/search', methods=["GET", "POST"])
 def search_form():
@@ -393,13 +389,13 @@ def detailed_search():
 
         recipes = search_request(params)
 
-        return render_template('recipes/recipes.html', recipes=recipes)
+        return render_template('recipes/filter-recipes.html', recipes=recipes)
     
     ## if form not submitted, fetch saved recipes from session for recipes/recipes.hhtml rendering ##
     saved_recipes = session['recipes']
 
     recipes = [ShortRecipe(recipe) for recipe in saved_recipes]
-    return render_template('recipes/recipes.html', recipes=recipes)
+    return render_template('recipes/filter-recipes.html', recipes=recipes)
 
 
 @app.route('/quick-search', methods=['GET', 'POST'])
@@ -413,18 +409,17 @@ def quick_search():
                 "sort": "meta-score",
                 "addRecipeInformation": "true"
             }
-
         recipes = search_request(params)
 
-        return render_template('recipes/recipes.html', recipes=recipes)
+        return render_template('recipes/filter-recipes.html', recipes=recipes)
     
     ## if form not submitted, fetch saved recipes from session for recipes/recipes.hhtml rendering ##
     saved_recipes = session['recipes']
 
     recipes = [ShortRecipe(recipe) for recipe in saved_recipes]
-    return render_template('recipes/recipes.html', recipes=recipes)
+    return render_template('recipes/filter-recipes.html', recipes=recipes)
 
-######################################################################### Recipe functions:
+######################################################################### Recipe helper functions:
 
 def get_random_recipes(num):
     """Get num number of random recipes"""
