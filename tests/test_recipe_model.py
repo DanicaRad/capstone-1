@@ -2,7 +2,7 @@
 
 # run these tests like:
 #
-#    python -m unittest test_recipe_model.py
+#    python -m unittest test/test_recipe_model.py
 
 
 import os

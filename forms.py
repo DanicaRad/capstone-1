@@ -1,9 +1,9 @@
 """Forms for recipe search."""
 
 from flask_wtf import FlaskForm
-from wtforms import StringField, SelectField, SelectMultipleField, HiddenField, PasswordField, TextAreaField, BooleanField
+from wtforms import StringField, SelectField, SelectMultipleField, PasswordField, TextAreaField, BooleanField
 from wtforms.validators import Optional, DataRequired, Email, Length
-from search_params import cuisines, intolerances, diets, type, sort
+from data.search_params import cuisines, intolerances, diets, type, sort
 
 class UserAddForm(FlaskForm):
     """Form for adding users."""

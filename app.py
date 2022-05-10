@@ -7,7 +7,7 @@ import requests
 import random
 from flask_debugtoolbar import DebugToolbarExtension
 from sqlalchemy.exc import IntegrityError
-from site_models import ShortRecipe
+from helpers import ShortRecipe
 from forms import ListForm, SearchForm, UserAddForm, LoginForm, UserAddForm, UserEditForm
 from models import db, connect_db, User, List, Recipe, RecipeList, Favorites
 
