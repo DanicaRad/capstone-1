@@ -15,16 +15,16 @@
 {% for recipe in recipes %}
 <div class="col-sm-3 card-deck mb-3">
 <div class="card recipe-card">
-    <img class="card-img-top" src="{{ recipe.image_url }}" alt="Card image cap">
+    <a href="{{ url_for('recipe_info', id=recipe.id) }}"><img class="card-img-top recipes-image" src="{{ recipe.image_url }}" alt="Card image cap"></a>
     <div class="card-body">
-      <a href="{{ url_for('recipe_info', id=recipe.id) }}"><h5 class="card-title">{{ recipe.title }}</h5></a>
-      <p>
+      <a href="{{ url_for('recipe_info', id=recipe.id) }}"><h6 class="card-title text-dark text-uppercase">{{ recipe.title }}</h6></a>
+      <div class="mb-2">
         <span class="badge rounded-pill bg-success">{{ recipe.score }}%</span>
           {% for tag in recipe.tags %}
-          <span class="badge bg-light text-dark">{{ tag }}</span>
+          <span class="badge bg-light text-dark text-uppercase">{{ tag }}</span>
           {% endfor %}
-      </p>
-      <p>{{ recipe.summary[0:50] }}...</p>
+      </div>
+      <p class="lh-sm fw-light fs-6">{{ recipe.summary[0:80] }}...</p>
 
         {% if g.user %}
 
@@ -38,7 +38,7 @@
                     </button>
   
                     <div class="btn-group lists-btn">
-                        <button type="button" class="btn btn-secondary btn-sm text-decoration-none dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false">Save <span class="oi oi-book"></span>
+                        <button type="button" class="btn btn-link btn-lg p-0" data-bs-toggle="dropdown" aria-expanded="false"><i class="bi bi-bookmark-plus-fill"></i>
                         </button>
                         <ul class="dropdown-menu">
                         {% for list in g.user.lists %}

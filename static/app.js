@@ -70,6 +70,16 @@ async function sendPostRequest(endpoint, data) {
     return res
 }
 
+async function sendGetRequest(endpoint, data) {
+    const res = await axios({
+        url:`${BASE_URL}/${endpoint}`,
+        method: "GET",
+        data: data
+    })
+    
+    return res
+}
+
 // Selects delete list button from lists.html
 const deleteListBtn = document.querySelectorAll(".delete-list")
 
@@ -91,6 +101,23 @@ async function deleteList(e) {
             showAlert(res);
             document.getElementById(data.id).remove();
         }
+    }
+}
+
+// Get HTML element for conversion request event listener
+const convertBtn = document.getElementById("ingredients")
+
+convertBtn.addEventListener("click", getConversions)
+
+async function getConversions(e) {
+    e.preventDefault();
+
+    if(e.target.tagName == "BUTTON") {
+        const ingredients = document.querySelectorAll(".ingredient");
+        ingredients.forEach(i => {
+            i.classList.toggle("d-none");
+        })
+
     }
 }
 

@@ -36,9 +36,12 @@ connect_db(app)
 @app.before_request
 def add_user_to_g():
     """If we're logged in, add curr user to Flask global."""
+    print(F"**********************{session}*********************")
 
     if CURR_USER_KEY in session:
         g.user = User.query.get(session[CURR_USER_KEY])
+
+        print(F"**********************{g.user}*********************")
 
     else:
         g.user = None
@@ -154,7 +157,7 @@ def profile():
             flash("Acces unauthroized; incorrect password.")
             return redirect('/login')
 
-    return render_template('users/profile.html', form=form)
+    return render_template('users/edit.html', form=form)
 
 @app.route('/favorites')
 def favorites():
@@ -309,12 +312,24 @@ def add_to_list():
 def add_or_delete_favorite():
     """Adds recipe to user favorites if not in favorites from axios request. Returns json."""
 
-    if not g.user:
-        return (jsonify(message="You must be logged in or signup to add favorites"), 202)
+    print(f"************************************** G.USER {g.user}*******************************************************************")
 
-    id = request.json['id']
+    # if not g.user:
+    #     return (jsonify(message="You must be logged in or signup to add favorites"), 401)
+
+    print(f"**********************************REQUEST.JSON ****************************************")
+
+    json_data = request.get_json()
+
+    print(f"****************JSON_DATA {json_data} ******************")
+
+    id = json_data.get('id')
+
+    print(f"***************************** ID = {id}****************************")
 
     recipe = get_recipe(id)
+
+    print(f"******************************{recipe}****************************")
 
     if recipe in g.user.favorites:
         fav = Favorites.query.filter(Favorites.user_id == g.user.id, Favorites.recipe_id == id).one()
@@ -340,6 +355,7 @@ def recipe_info(id):
     recipe = get_recipe(id)
 
     return render_template('recipes/recipe.html', recipe=recipe)
+
 
 @app.route('/search', methods=["GET", "POST"])
 def search_form():

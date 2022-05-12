@@ -14,7 +14,7 @@
           {% for error in field.errors %}
             <span class="text-danger">{{ error }}</span>
           {% endfor %}
-          {{ field(placeholder=field.label.text, class="form-control") }}
+          {{ field(placeholder=field.label.text, class="form-control mb-3") }}
         {% endfor %}
 
         <p>To confirm changes, enter your password:</p>
@@ -25,11 +25,11 @@
           </span>
           {% endfor %}
         {% endif %}
-        {{ form.password(placeholder="Enter your password to confirm", class="form-control") }}
+        {{ form.password(placeholder="Enter your password to confirm", class="form-control mb-3") }}
 
         <div class="edit-btn-area">
           <button class="btn btn-success">Update</button>
-          <a href="/users/{{ user_id }}" class="btn btn-outline-secondary">Cancel</a>
+          <a href="{{ url_for('show_user', id=g.user.id)}}" class="btn btn-outline-secondary">Cancel</a>
         </div>
       </form>
     </div>

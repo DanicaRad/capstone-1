@@ -12,9 +12,9 @@
 </head>
 
 <body>
-    <nav class="navbar navbar-expand-lg navbar-light bg-light">
+    <nav class="navbar navbar-expand-lg sticky-top navbar-light bg-light">
         <div class="container-fluid">
-          <a class="navbar-brand" href="/">Home</a>
+          <a class="navbar-brand" href="/"><img src="/static/images/fork-and-knife.svg" alt="fork and knife logo" width="48" height="42"></a>
           <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
             <span class="navbar-toggler-icon"></span>
           </button>
@@ -27,18 +27,20 @@
                 <li class="nav-item"><a class="nav-link" href="/signup">Signup</a></li>
 
             {% else %}
-              <li class="nav-item">
-                <a class="nav-link" href="{{ url_for('show_user', id=g.user.id) }}"><span class="oi oi-person" aria-hidden="true"></span></a>
-              </li>
-              <li class="nav-item">
-                <a class="nav-link" href="{{ url_for('users_lists', id=g.user.id) }}"><span class="oi oi-book"></span></a>
-              </li>
-              <li class="nav-item">
-                <a class="nav-link" href="{{ url_for('search_form') }}"><i class="bi bi-search"></i></a>
+              <li class="nav-item dropdown">
+                <a class="nav-link" href="#" id="navbarDropdownMenuLink" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                  <i class="bi bi-person-circle nav-icon"></i>
+                </a>
+                <ul class="dropdown-menu dropdown-menu" aria-labelledby="navbarDropdownMenuLink">
+                  <li><a class="dropdown-item" href="{{ url_for('show_user', id=g.user.id) }}">My Profile</a></li>
+                  <li><a class="dropdown-item" href="{{ url_for('favorites') }}">My Favorites</a></li>
+                  <li><a class="dropdown-item" href="{{ url_for('users_lists', id=g.user.id) }}">My Lists</a></li>
+                  <li><a class="dropdown-item" href="/logout">Logout</a></li>
+                </ul>
               </li>
               <li class="nav-item dropdown">
-                <a class="nav-link dropdown-toggle" href="#" id="navbarDropdownMenuLink" role="button" data-bs-toggle="dropdown" aria-expanded="false">
-                    <span class="oi oi-plus"></span>
+                <a class="nav-link" href="#" id="navbarDropdownMenuLink" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                  MY LISTS
                 </a>
                 <ul class="dropdown-menu" aria-labelledby="navbarDropdownMenuLink">
                     <li class="nav-item"><a class="nav-link" href="{{ url_for('favorites') }}"><span class="oi oi-heart"></span>  Favorites</a></li>
@@ -49,10 +51,13 @@
                     <li class="nav-item"><a class="nav-link" href="{{ url_for('add_list') }}">Create New List</a></li>
                 </ul>
               </li>
-              <li class="nav-item text-end"><a class="nav-link" href="/logout">Logout</a></li>
+
               {% endif %}
+              <li class="nav-item">
+                <a class="nav-link" href="{{ url_for('search_form') }}">SEARCH  </a>
+              </li>
             </ul>
-            <form class="d-flex" action="{{ url_for('quick_search') }}" method="POST">
+            <form class="d-flex navbar-search" action="{{ url_for('quick_search') }}" method="POST">
                 <div class="input-group">
                     <input type="text" class="form-control" placeholder="Quick Search" aria-label="query" aria-describedby="quick-search" name="query">
                     <button class="btn btn-outline-secondary bi bi-search" type="button" id="quick-search"></button>
@@ -70,6 +75,11 @@
     {% block content %}
     {% endblock %}
     </div>
+    <footer class="navbar navabr-expand-lg bottom navbar-light bg-light mt-5">
+      <div class="container-fluid">
+        <a class="navbar-brand" href="/"><img src="/static/images/fork-and-knife.svg" alt="fork and knife logo" width="30" height="30"></a>
+      </div>
+    </footer>
     
     <script src="https://unpkg.com/axios/dist/axios.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-ka7Sk0Gln4gmtz2MlQnikT1wXgYsOg+OMhuP+IlRH9sENBO0LRn5q+8nbTov4+1p" crossorigin="anonymous"></script>

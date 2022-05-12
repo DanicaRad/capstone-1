@@ -4,10 +4,36 @@ a {
     text-decoration: none;
 }
 
+.nav-icon {
+    font-size: large;
+}
+
+/**** Navbar *********************************/
+
+.navbar-brand {
+    padding-left: 1.5rem;
+}
+
+.navbar-brand:hover {
+    opacity: .8;
+}
+
+.navbar-search {
+    padding-right: 1.5rem;
+}
+
 /***** Recipes  ******************************/
 
-.card-image-top {
-    opacity: 50%;
+.recipes-image {
+    opacity: .9;
+}
+
+.recipes-image:hover {
+    opacity: .8;
+}
+
+.card-title:hover {
+    opacity: .9;
 }
 
 .fav {
@@ -18,6 +44,10 @@ a {
     color: white;
 }
 
+.bi-heart-fill:hover {
+    color: chocolate;
+}
+
 #heart {
     text-decoration: none;
     padding: 0 .25rem;
@@ -26,13 +56,30 @@ a {
     right: 0;
 }
 
-#heart:hover {
-    color: chocolate;
+.lists-btn {
+    position: absolute;
+    top: 0;
+    left: 0;
 }
 
-.oi-book {
-    padding-left: .5rem;
+.bi-bookmark-plus-fill {
+    color: black;
 }
+
+.bi-bookmark-plus-fill:hover {
+    color: white;
+}
+
+.save-btn:hover {
+    opacity: .8;
+}
+
+.convert {
+    font-size: smaller;
+    margin: .75rem 0;
+}
+
+
 
 
 /** Users **************************************/
@@ -50,17 +97,16 @@ a {
 #list-header, #recipe-header {
     height: 360px;
     margin-top: 0px;
-    /* opacity: 0.7; */
     background-size: cover;
     background-position: center;
 }
 
 #list-image, #recipe-image {
-    opacity: 0.6;
+    opacity: 0.8;
 }
 
 #list-heading, #recipe-heading {
-    padding: 10px;
+    padding: 0 10px 10px 10px;
     color: black;
 }
 

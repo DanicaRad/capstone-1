@@ -3,9 +3,10 @@
 
 {% block content %}
 
-<div id="recipe-header" class="full-width w-100 overflow-hidden position-relative mb-3"><img src="{{ recipe.image_url}}" alt="image for {{ recipe.title }}" class="vw-100" id="recipe-image">
+<div class="card">
+<div id="recipe-header" class="full-width w-100 overflow-hidden position-relative card-image-top"><img src="{{ recipe.image_url}}" alt="image for {{ recipe.title }}" class="vw-100" id="recipe-image">
     <div id="recipe-heading" class="position-absolute bottom-0">
-        <h2>{{ recipe.title }}</h2>
+        <div class="display-2 text-uppercase">{{ recipe.title }}</div>
         {% if g.user %}
         <form method="POST" class="recipe-form">
             <button class="btn btn-lg btn-link bi bi-heart-fill
@@ -14,61 +15,84 @@
                     <!-- <span class="fav-count">{{ recipe.favs() }}</span> -->
                 <!-- {% endif %} -->
             </button>
-        <div class="btn-group" class="lists-btn">
-            <button type="button" class="btn btn-secondary btn-sm text-decoration-none dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false">Save <span class="oi oi-book"></span>
-            </button>
+            <div class="btn-group" class="lists-btn">
+                <button type="button" class="btn btn-dark btn-sm fw-light dropdown-toggle save-btn" data-bs-toggle="dropdown" aria-expanded="false">SAVE
+                </button>
 
-            <ul class="dropdown-menu">
-            {% for list in g.user.lists %}
-            {% if not list.has_recipe(recipe.id) %}
-                <li data-list="{{ list.id }}" data-recipe="{{ recipe.id }}" class="dropdown-item">
-                    {{ list.name }}
-                </li>
-            {% endif %}
-            {% endfor %}
-            </ul>
-        </div>
+                <ul class="dropdown-menu">
+                {% for list in g.user.lists %}
+                {% if not list.has_recipe(recipe.id) %}
+                    <li data-list="{{ list.id }}" data-recipe="{{ recipe.id }}" class="dropdown-item">
+                        {{ list.name }}
+                    </li>
+                {% endif %}
+                {% endfor %}
+                </ul>
+            </div>
         </form>
         {% endif %}
     </div>
 </div>
+</div>
 
-<p>
+<div class="card-body">
+<div class="mb-2">
+    {% if recipe.source_url %}
+    <a class="lead fs-6 pe-2" href="{{ recipe.source_url }}"><em>{{ recipe.source }}</em></a>
+{% endif %}
 {% if recipe.score %}
     <span class="badge rounded-pill bg-success">{{ recipe.score }}%</span>
 {% endif %}
 {% if recipe.tags %}
     {% for tag in recipe.tags %}
-        <span class="badge bg-light text-dark">{{ tag }}</span>
+        <span class="badge bg-light text-dark text-uppercase">{{ tag }}</span>
     {% endfor %}
 {% endif %}
-</p>
-{% if recipe.source_url %}
-    <p><a href="{{ recipe.source_url }}">{{ recipe.source }}</a></p>
-{% endif %}
+</div>
 {% if recipe.summary %}
-    <p>{{ recipe.summary }}</p>
+    <div class="lead fs-6 lh-lg">{{ recipe.summary }}</div>
 {% endif %}
+</div>
 
-<div class="row row-cols-2">
-    <div class="col">
-    {% if recipe.ingredients %}
-    <h5>Ingredients</h5>
-        {% for i in recipe.us %}
-        <p>{{ i }}</p>
-        {% endfor %}
-    {% endif %}
-    </div>
-    <div class="col">
-    {% if recipe.instructions %}
-    <h5>Instructions</h5>
-        <ol>
-            {% for i in recipe.instructions.split(".") %}
-            {% if i| length > 1 %}
-                <li>{{ i }}</li>
+<div class="card-group row mt-3">
+    <div class="card-deck col-6 ps-5">
+        <div class="card">
+            {% if recipe.ingredients %}
+            <h5 class="card-header bg-dark text-light lead m-3">INGREDIENTS</h5>
+            <div class="card-body" id="ingredients">
+                <div id="us" class="ingredient">
+                {% for i in recipe.us %}
+                <p>{{ i }}</p>
+                {% endfor %}
+                <button class="btn btn-sm btn-outline-dark fw-light convert">GET METRIC CONVERSIONS
+                </button>
+                </div>
+                <div id="metric" class="d-none ingredient">
+                    {% for i in recipe.metric %}
+                    <p>{{ i }}</p>
+                    {% endfor %}
+                    <button class="btn btn-sm btn-outline-dark fw-light convert">GET US CONVERSIONS
+                    </button>
+                </div>
+            </div>
+        </div>
             {% endif %}
-            {% endfor %}
-        </ol>
+    </div>
+
+    <div class="card-deck col-6 pe-5">
+        <div class="card">
+            {% if recipe.instructions %}
+            <h5 class="lead card-header bg-dark text-light m-3 text-center">INSTRUCTIONS</h5>
+            <div class="card-body">
+                <ol>
+                    {% for i in recipe.instructions.split(".") %}
+                    {% if i| length > 1 %}
+                        <li class="pb-4">{{ i }}</li>
+                    {% endif %}
+                    {% endfor %}
+                </ol>
+            </div>
+        </div>
     {% endif %}
     </div>
 </div>

@@ -3,12 +3,12 @@
 
 {% block content %}
 <div class="container mt-3">
-    <div class="row">
+    <div class="row align-items-center">
         <div class="col-sm-3" style="height: 200px">
-            <img id="profile-img" class="mr-3" src="{{ user.image_url }}" alt="user image">
+            <img id="profile-img" class="mr-3" src="{{ user.image_url if user.image_url else '/static/images/default-user-image.svg'}}" alt="user image">
         </div>
         <div class="col-sm-auto">
-            <h5 class="mt-0">{{ user.username }}</h5>
+            <h5>{{ user.username }}</h5>
             {% if user.bio %}
                 <p>{{ user.bio }}</p>
             {% else %}
@@ -21,18 +21,44 @@
     </div>
 </div>
 
-    <div class="row">
-        <div class="col">
-            <h5>Lists</h5>
-            {% for list in user.lists %}
-            <a href="/lists/{{ list.id }}">{{ list.name }}</a>
-            {% endfor %}
+    <div class="card-group row mt-5">
+        <div class="card-deck col-6 ps-5">
+            <div class="card">
+                {% if g.user.id == user.id %}
+                {% if user.favorites %}
+                <h5 class="card-header bg-dark text-light lead m-3">FAVORITES</h5>
+                <div class="card-body" id="ingredients">
+                    {% for recipe in user.favorites %}
+                    <p><a href="{{ url_for('recipe_info', id=recipe.id) }}" class="text-dark btn-link">{{ recipe.title }}</a></p>
+                    {% endfor %}
+                </div>
+                {% endif %}
+                {% endif %}
+            </div>
         </div>
-        <div class="col">
-            <h5>Favorites</h5>
-            {% for recipe in user.favorites %}
-            <a href="/recipes/{{ recipe.id }}">{{ recipe.title }}</a>
-            {% endfor %}
+    
+        <div class="card-deck col-6 pe-5">
+            <div class="card">
+                {% if user.lists %}
+                {% if g.user.id == user.id %}
+                <h5 class="lead card-header bg-dark text-light m-3 text-center">LISTS</h5>
+                <div class="card-body">
+                    {% for list in user.lists %}
+                    <p><a href="{{ url_for('show_list', id=list.id) }}" class="btn-link text-dark">{{ list.name }}</a></p>
+                    {% endfor %}
+                </div>
+                {% else %}
+                <h5 class="lead card-header bg-dark text-light m-3 text-center">LISTS</h5>
+                <div class="card-body">
+                    {% for list in user.lists %}
+                    {% if list.private == False %}
+                    <p><a href="{{ url_for('show_list', id=list.id) }}" class="btn-link text-dark">{{ list.name }}</a></p>
+                    {% endif %}
+                    {% endfor %}
+                </div>
+                {% endif %}
+                {% endif %}
+            </div>
         </div>
     </div>
 
