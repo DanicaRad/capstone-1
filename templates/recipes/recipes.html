@@ -19,12 +19,18 @@
     <div class="card-body">
       <a href="{{ url_for('recipe_info', id=recipe.id) }}"><h6 class="card-title text-dark text-uppercase">{{ recipe.title }}</h6></a>
       <div class="mb-2">
+        {% if recipe.score %}
         <span class="badge rounded-pill bg-success">{{ recipe.score }}%</span>
+        {% endif %}
+        {% if recipe.tags %}
           {% for tag in recipe.tags %}
           <span class="badge bg-light text-dark text-uppercase">{{ tag }}</span>
           {% endfor %}
+          {% endif %}
       </div>
+      {% if recipe.summary %}
       <p class="lh-sm fw-light fs-6">{{ recipe.summary[0:80] }}...</p>
+      {% endif %}
 
         {% if g.user %}
 

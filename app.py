@@ -1,8 +1,8 @@
-"""Test for checking out API responses"""
 
+from http.client import HTTPException
 import os
 
-from flask import Flask, render_template, request, flash, redirect, jsonify, session, g
+from flask import Flask, render_template, request, flash, redirect, jsonify, session, g, json
 import requests
 import random
 from flask_debugtoolbar import DebugToolbarExtension
@@ -14,6 +14,8 @@ from models import db, connect_db, User, List, Recipe, RecipeList, Favorites
 CURR_USER_KEY = "curr_user"
 
 app = Flask(__name__)
+
+app.config['TESTING'] = True
 
 app.config['SQLALCHEMY_DATABASE_URI'] = (
     os.environ.get('DATABASE_URL', 'postgresql:///spoonacular'))
@@ -36,12 +38,9 @@ connect_db(app)
 @app.before_request
 def add_user_to_g():
     """If we're logged in, add curr user to Flask global."""
-    print(F"**********************{session}*********************")
 
     if CURR_USER_KEY in session:
         g.user = User.query.get(session[CURR_USER_KEY])
-
-        print(F"**********************{g.user}*********************")
 
     else:
         g.user = None
@@ -186,7 +185,8 @@ def add_list():
     if form.validate_on_submit():
         name = form.name.data
         description = form.description.data or None
-        list = List(name=name, description=description, user_id=g.user.id)
+        private = form.private.data or False
+        list = List(name=name, description=description, private=private, user_id=g.user.id)
 
         db.session.add(list)
         db.session.commit()
@@ -212,28 +212,40 @@ def show_list(id):
 
     list = List.query.get_or_404(id)
 
-    if not g.user and list.private == True or list.private == True and list.user_id != g.user.id:
+    if not g.user:
 
-        flash("This list is private.", "danger")
-        return redirect('/')
+        if list.private == False:
+            return render_template("lists/list.html", list=list)
 
-    return render_template('lists/list.html', list=list)
+        flash("This list is private", "danger")
+        return redirect('/signup')
+
+    if list.user_id == g.user.id:
+        return render_template("lists/list.html", list=list)
+
+    flash("This list is private", "danger")
+    return redirect('/signup')
 
 @app.route('/lists/<int:id>/delete', methods=['GET', 'POST'])
 def delete_list(id):
-    """Delete's user list in list.html"""
+    """Deletes user list in list.html"""
 
     list = List.query.get_or_404(id)
 
-    if not g.user or list.user_id != g.user.id:
-        flash("Unauthorized action", "danger")
-        return redirect(f'/lists/{id}')
-    
-    db.session.delete(list)
-    db.session.commit()
+    if not g.user:
+        flash("Action unauthorized", "danger")
+        return redirect(f"/lists/{id}")
 
-    flash("List deleted", "warning")
-    return redirect(f'/users/{g.user.id}/lists')
+    if list.user_id == g.user.id:
+    
+        db.session.delete(list)
+        db.session.commit()
+
+        flash("List deleted", "warning")
+        return redirect(f'/users/{g.user.id}/lists')
+
+    flash("Action unauthorized", "danger")
+    return redirect(f"/lists/{id}")
 
 ########################################################################### AXIOS post request List routes
 
@@ -244,20 +256,24 @@ def delete_list_from_lists():
     id = request.json['id']
     list = List.query.get_or_404(id)
 
-    if not g.user or list.user_id != g.user.id:
-        return (jsonify(message="Access unauthorized"), 202)
+    if not g.user:
+        return (jsonify(message="Action unauthorized"), 401)
 
-    db.session.delete(list)
-    db.session.commit()
+    if  list.user_id == g.user.id:
 
-    return (jsonify(message="List Deleted"), 200)
+        db.session.delete(list)
+        db.session.commit()
+
+        return (jsonify(message="List deleted"), 200)
+
+    return (jsonify(message="Action unauthorized"), 401)
 
 @app.route('/lists/delete-from', methods=['GET', 'POST'])
 def delete_from_list():
     """Deletes recipe from list from axios post request. Returns json."""
 
     if not g.user:
-        return (jsonify(message="Action unauthorized"), 202)
+        return (jsonify(message="Action unauthorized"), 401)
 
     r_id = request.json['recipe']
     l_id = request.json['list']
@@ -265,7 +281,7 @@ def delete_from_list():
 
     list = List.query.get_or_404(l_id)
     if list not in g.user.lists:
-        return (jsonify(message="Action unauthroized"), 202)
+        return (jsonify(message="Action unauthorized"), 401)
 
     recipe = Recipe.query.get_or_404(r_id)
     if recipe in list.recipes:
@@ -285,17 +301,14 @@ def delete_from_list():
 def add_to_list():
     """Add recipe to user list from axios request. Returns json."""
 
-    if not g.user:
-        return(jsonify(message="Action unauthorized"), 202)
-
     r_id = request.json['recipe']
     l_id = request.json['list']
 
     list = List.query.get_or_404(l_id)
     recipe = get_recipe(r_id)
 
-    if list.user_id != g.user.id:
-        return(jsonify(message="Action unauthorized"), 202)
+    if not g.user or list.user_id != g.user.id:
+        return(jsonify(message="Action unauthorized"), 401)
     
     if recipe in list.recipes:
         return(jsonify(message="Duplicate recipe."), 202)
@@ -312,38 +325,29 @@ def add_to_list():
 def add_or_delete_favorite():
     """Adds recipe to user favorites if not in favorites from axios request. Returns json."""
 
-    print(f"************************************** G.USER {g.user}*******************************************************************")
+    if not g.user:
+        return (jsonify(message="You must be logged in or signup to add favorites"), 401)
 
-    # if not g.user:
-    #     return (jsonify(message="You must be logged in or signup to add favorites"), 401)
-
-    print(f"**********************************REQUEST.JSON ****************************************")
-
-    json_data = request.get_json()
-
-    print(f"****************JSON_DATA {json_data} ******************")
-
-    id = json_data.get('id')
-
-    print(f"***************************** ID = {id}****************************")
-
+    id = request.json['id']
     recipe = get_recipe(id)
 
-    print(f"******************************{recipe}****************************")
+    if recipe:
 
-    if recipe in g.user.favorites:
-        fav = Favorites.query.filter(Favorites.user_id == g.user.id, Favorites.recipe_id == id).one()
+        if recipe in g.user.favorites:
+            fav = Favorites.query.filter(Favorites.user_id == g.user.id,    Favorites.recipe_id == id).one()
 
-        db.session.delete(fav)
+            db.session.delete(fav)
+            db.session.commit()
+
+            return (jsonify(message="Removed from favorites"), 200)
+
+        newfav = Favorites(user_id=g.user.id, recipe_id=id)
+        db.session.add(newfav)
         db.session.commit()
 
-        return (jsonify(message="Removed from favorites"), 200)
+        return (jsonify(message="Added to favorites!"), 200)
 
-    newfav = Favorites(user_id=g.user.id, recipe_id=id)
-    db.session.add(newfav)
-    db.session.commit()
-
-    return (jsonify(message="Added to favorites!"), 200)
+    return (jsonify(message="We couldn't find that recipe"), 404)
 
 #####################################################################
 ######################################################################### Recipe routes:
@@ -489,7 +493,14 @@ def homepage():
 
     flash(f"Welcome back, {g.user.username}!")
 
-    return render_template('/recipes/recipes.html', recipes=recipes)  
+    return render_template('/recipes/recipes.html', recipes=recipes)
+
+@app.errorhandler(404)
+def page_not_found(e):
+    """Handle 404 error"""
+
+    return render_template("404.html"), 404
+
 
 ############################################################################
 

@@ -37,6 +37,9 @@ async function handleClick(e) {
             e.target.classList.toggle('not-fav');
             e.target.classList.toggle('fav');
         }
+        if(res.status == 404) {
+            showAlert(res);
+        }
     }
 
     if(e.target.tagName == 'LI') {
@@ -70,16 +73,6 @@ async function sendPostRequest(endpoint, data) {
     return res
 }
 
-async function sendGetRequest(endpoint, data) {
-    const res = await axios({
-        url:`${BASE_URL}/${endpoint}`,
-        method: "GET",
-        data: data
-    })
-    
-    return res
-}
-
 // Selects delete list button from lists.html
 const deleteListBtn = document.querySelectorAll(".delete-list")
 
@@ -107,9 +100,10 @@ async function deleteList(e) {
 // Get HTML element for conversion request event listener
 const convertBtn = document.getElementById("ingredients")
 
-convertBtn.addEventListener("click", getConversions)
+convertBtn.addEventListener("click", showConversions)
 
-async function getConversions(e) {
+// Toggles HTML ingredient measures' visibility to show either US or Metric measures
+async function showConversions(e) {
     e.preventDefault();
 
     if(e.target.tagName == "BUTTON") {
@@ -153,6 +147,18 @@ async function getRecipe() {
     console.log(res)
     console.log(recipe)
 
+}
+
+async function recipeInfo(id) {
+    try {
+        const res = await axios({
+        url: `https://api.spoonacular.com/recipes/${id}/information?apiKey=${API_KEY}`,
+        method: "GET",
+        params: {"includeNutrition":"false"}
+        })
+    } catch(e) {
+        console.log("ERROR", e)
+    }
 }
 
 async function searchRecipes() {

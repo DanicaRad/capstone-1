@@ -2,7 +2,7 @@
 
 # run these tests like:
 #
-#    FLASK_ENV=production python -m unittest test_recipe_views.py
+#    FLASK_ENV=production python -m unittest tests/test_recipe_views.py
 
 
 import os
@@ -63,6 +63,15 @@ class RecipeViewsTestCase(TestCase):
 
         self.assertEqual(resp.status_code, 200)
         self.assertIn("Test Recipe", html)
+
+    def test_view_invalid_recipe_info(self):
+        """Test 404 error page shown when invalid recipe id requested."""
+
+        resp = self.client.get("/recipes/lknioh4oi2")
+        html = resp.get_data(as_text=True)
+
+        self.assertEqual(resp.status_code, 404)
+        self.assertIn("Page Not Found.", html)
 
     def test_recipe_search_form_view(self):
         """Test recipe search form"""
