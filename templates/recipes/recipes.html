@@ -17,51 +17,60 @@
 <div class="card recipe-card">
     <a href="{{ url_for('recipe_info', id=recipe.id) }}"><img class="card-img-top recipes-image" src="{{ recipe.image_url }}" alt="Card image cap"></a>
     <div class="card-body">
-      <a href="{{ url_for('recipe_info', id=recipe.id) }}"><h6 class="card-title text-dark text-uppercase">{{ recipe.title }}</h6></a>
-      <div class="mb-2">
+      <div class="card-title fs-6 lead fw-bolder text-uppercase">
+        <a class="stretched-link lead text-dark" href="{{ url_for('recipe_info', id=recipe.id) }}">{{ recipe.title }}</a>
+      </div>
+      <div class="card-text">
         {% if recipe.score %}
-        <span class="badge rounded-pill bg-success">{{ recipe.score }}%</span>
+        <span class="badge rounded-pill bg-success fw-light">{{ recipe.score }}%</span>
         {% endif %}
         {% if recipe.tags %}
           {% for tag in recipe.tags %}
           <span class="badge bg-light text-dark text-uppercase">{{ tag }}</span>
           {% endfor %}
           {% endif %}
-      </div>
-      {% if recipe.summary %}
-      <p class="lh-sm fw-light fs-6">{{ recipe.summary[0:80] }}...</p>
-      {% endif %}
-
-        {% if g.user %}
-
-            <div class="row">
-                <form class="recipe-form" method="POST">
-                    <button id="heart" class="btn btn-lg btn-link bi bi-heart-fill
-                      {{'fav' if recipe in g.user.favorites else 'not-fav'}}" data-id="{{ recipe.id }}">
-                    <!-- {% if recipe.favorites %} -->
-                        <!-- <span class="fav-count">{{ recipe.favs() }}</span> -->
-                    <!-- {% endif %} -->
-                    </button>
-  
-                    <div class="btn-group lists-btn">
-                        <button type="button" class="btn btn-link btn-lg p-0" data-bs-toggle="dropdown" aria-expanded="false"><i class="bi bi-bookmark-plus-fill"></i>
-                        </button>
-                        <ul class="dropdown-menu">
-                        {% for list in g.user.lists %}
-                            {% if not list.has_recipe(recipe.id) %}
-                            <li data-list="{{ list.id }}" data-recipe="{{ recipe.id }}" class="dropdown-item">
-                              {{ list.name }}
-                            </li>
-                            {% else %}
-                            {% endif %}
-                        {% endfor %}
-                        </ul>
-                    </div>
-                </form>
-            </div>
-            {% endif %}
     </div>
-  </div>
+      </div>
+
+      {% if g.user %}
+
+      <div class="row">
+          <form class="recipe-form" method="POST">
+              <button id="heart" class="btn btn-lg btn-link pe-1 bi bi-heart-fill
+                {{'fav' if recipe in g.user.favorites else 'not-fav'}}" data-id="{{ recipe.id }}">
+              <!-- {% if recipe.favorites %} -->
+                  <!-- <span class="fav-count">{{ recipe.favs() }}</span> -->
+              <!-- {% endif %} -->
+              </button>
+
+              <div class="btn-group lists-btn">
+                  <button type="button" class="btn btn-link btn-lg p-0" data-bs-toggle="dropdown" aria-expanded="false"><i class="bi bi-bookmark-plus-fill ps-1"></i>
+                  </button>
+                  <ul class="dropdown-menu">
+                  {% for list in g.user.lists %}
+                      {% if not list.has_recipe(recipe.id) %}
+                      <li data-list="{{ list.id }}" data-recipe="{{ recipe.id }}" class="dropdown-item">
+                        {{ list.name }}
+                      </li>
+                      {% else %}
+                      {% endif %}
+                  {% endfor %}
+                  </ul>
+              </div>
+          </form>
+      </div>
+      {% endif %}
+      <div class="card-footer bg-body">
+      <ul class="list-group list-group-flush">
+        <li class="list-group-item row row-cols-2 pt-0">
+            <span class="lead fs-6">READY IN:</span>
+            <small class="text-right">{{ recipe.readyInMinutes}} mins</small>
+        </li>
+        <li class="list-group-item row row-cols-2 pb-0"><span class="lead fs-6">SERVINGS:</span><small class="text-right">{{ recipe.servings }}</small>
+        </li>
+    </ul>
+    </div>
+    </div>
 </div>
 {% endfor %}
 </div>

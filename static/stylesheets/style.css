@@ -1,7 +1,15 @@
 /** General site styles ***********************/
 
+body {
+    margin-bottom: 5rem;
+}
+
 a {
     text-decoration: none;
+}
+
+a:hover {
+    opacity: .8;
 }
 
 .nav-icon {
@@ -77,6 +85,17 @@ a {
 .convert {
     font-size: smaller;
     margin: .75rem 0;
+}
+
+/*** Lists ***********************************/
+
+#show-more {
+    background-color: black;
+    color: white;
+}
+
+#show-more:hover {
+    opacity: .8;
 }
 
 

@@ -1,0 +1,46 @@
+{% extends 'base.html' %}
+
+{% block title %}Base List Template{% endblock %}
+
+{% block content %}
+
+<!-- This is going to be the all-lists page -->
+
+<div class="display-5 mb-4">Get inspired with curated user lists</div>
+
+{% block show_lists %}
+
+<div class="row row-cols-lg-4 row-cols-md-2 row-cols-sm-1 g-4 justify-content-evenly">
+    {% for list in lists %}
+  <div class="col-3">
+    <div class="card list-card" id="{{ list.id }}" style="width: 16rem;">
+        <img src="{{ list.image_url }}" class="card-img-top" alt="recipe list image">
+        <div class="card-body">
+          <a href="{{ url_for('show_list', id=list.id) }}"><h5 class="card-title">{{ list.name }}</h5></a>
+          {% if list.description %}
+          <p class="card-text">{{ list.description }}</p>
+          {% endif %}
+          <small>{{ list.user.username }}</small>
+        </div>
+        {% if not recipe %}
+        <ul class="list-group list-group-flush">
+          {% for recipe in list.recipes[0:3] %}
+          <li class="list-group-item"><a href="{{ url_for('recipe_info', id=recipe.id) }}" class="text-dark">{{ recipe.title }}</a></li>
+          {% endfor %}
+        </ul>
+        {% if list.recipes| length > 3 %}
+        <ul id="hidden-recipes-{{ list.id }}" class="list-group list-group-flush d-none border-top-0">
+            {% for recipe in list.recipes[2:-1] %}
+            <li class="list-group-item"><a href="{{ url_for('recipe_info', id=recipe.id) }}" class="text-dark">{{ recipe.title }}</a></li>
+            {% endfor %}
+        </ul>
+        <div id="show-more" class="card-footer text-center bi bi-plus-lg"></div>
+        {% endif %}
+        {% endif %}
+    </div>
+  </div>
+  {% endfor %}
+</div>
+
+{% endblock %}
+{% endblock %}

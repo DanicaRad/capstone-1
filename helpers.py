@@ -9,5 +9,8 @@ class ShortRecipe:
     def __init__(self, res):
         self.id = res['id']
         self.title = res['title']
-        self.image_url = res['image']
+        self.image_url = res.get('image', None)
+        self.readyInMinutes = res.get('readyInMinutes', None)
+        self.servings = res.get('servings', None)
+
         

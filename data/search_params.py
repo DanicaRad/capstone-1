@@ -59,6 +59,11 @@ diets = [
     ("whole30", "Whole30")
 ]
 
+tags = {'dairyFree': 'Dairy Free',
+        'glutenFree': 'Gluten Free',
+        'vegetarian': 'Vegetarian',
+        'vegan': 'Vegan'}
+
 type = [
     "Dish Type",
     "Main Course",

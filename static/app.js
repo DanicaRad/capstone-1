@@ -100,7 +100,9 @@ async function deleteList(e) {
 // Get HTML element for conversion request event listener
 const convertBtn = document.getElementById("ingredients")
 
-convertBtn.addEventListener("click", showConversions)
+if(convertBtn) {
+    convertBtn.addEventListener("click", showConversions);
+}
 
 // Toggles HTML ingredient measures' visibility to show either US or Metric measures
 async function showConversions(e) {
@@ -113,6 +115,42 @@ async function showConversions(e) {
         })
 
     }
+}
+
+// All public user lists functions #####################
+
+// add event listener to show hidden recipes in public lists
+// const showMore = document.getElementById("show-more");
+
+// if(showMore) {
+//     showMore.addEventListener("click", showHiddenRecipes);
+// }
+
+// get listCard from HTML
+const listCard = document.querySelectorAll(".list-card")
+
+// if listCard on page, add event lisener
+if(listCard) {
+    listCard.forEach(div => {
+        div.addEventListener("click", showHiddenRecipes)
+    })
+}
+
+// toggle hidden recipe visibility on click
+function showHiddenRecipes(e) {
+
+    if(e.target.id == "show-more") {
+        const id = e.target.parentElement.id;
+        const hiddenRecipes = document.getElementById(`hidden-recipes-${id}`);
+
+        toggleRecipeVisibility(hiddenRecipes, e.target)
+    }
+}
+
+function toggleRecipeVisibility(recipe, target) {
+    recipe.classList.toggle("d-none");
+    target.classList.toggle("bi-plus-lg");
+    target.classList.toggle("bi-dash-lg");
 }
 
 // HTML manipulation ###############################
@@ -159,6 +197,16 @@ async function recipeInfo(id) {
     } catch(e) {
         console.log("ERROR", e)
     }
+}
+
+async function similarRecipes(id) {
+    const res = await axios({
+        url: `https://api.spoonacular.com/recipes/${id}/similar?apiKey=${API_KEY}`,
+        method: 'GET',
+        params: {"number": "4"}
+    })
+    console.log(res);
+    console.log("RES.DATA", res.data)
 }
 
 async function searchRecipes() {

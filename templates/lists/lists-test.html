@@ -1,0 +1,18 @@
+{% extends 'lists/lists-base.html' %}
+<!-- used to extend lists/lists-base.html -->
+
+{% block title %}Show User's Lists{% endblock %}
+
+<!-- this is going to be "extends recipe" page -->
+
+{% block content %}
+
+<div class="display-5 mb-4">Get inspired with lists from our users</div>
+
+{% block show_lists %}
+{{ super() }}
+
+{% endblock %}
+
+{% endblock %}
+

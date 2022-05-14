@@ -10,6 +10,7 @@ from sqlalchemy.exc import IntegrityError
 from helpers import ShortRecipe
 from forms import ListForm, SearchForm, UserAddForm, LoginForm, UserAddForm, UserEditForm
 from models import db, connect_db, User, List, Recipe, RecipeList, Favorites
+from data.search_params import diets
 
 CURR_USER_KEY = "curr_user"
 
@@ -206,6 +207,14 @@ def users_lists(id):
 
     return render_template('/lists/lists.html')
 
+@app.route('/lists')
+def show_all_lists():
+    """Shows all lists that aren't private."""
+
+    lists = List.query.filter(List.private == False).all()
+
+    return render_template('lists/lists-base.html', lists=lists, recipe=False)
+
 @app.route('/lists/<int:id>')
 def show_list(id):
     """Shows recipelist if list user is curr_user."""
@@ -246,6 +255,7 @@ def delete_list(id):
 
     flash("Action unauthorized", "danger")
     return redirect(f"/lists/{id}")
+
 
 ########################################################################### AXIOS post request List routes
 
@@ -357,8 +367,12 @@ def recipe_info(id):
     """Get and show recipe meta information from API."""
 
     recipe = get_recipe(id)
+    similar = get_similar_recipes(id)
+    # similar = get_similar_recipes(id)
 
-    return render_template('recipes/recipe.html', recipe=recipe)
+    lists = List.query.filter(List.recipes.contains(recipe), List.private == False).all()
+
+    return render_template('recipes/recipe.html', recipe=recipe, lists=lists, similar=similar)
 
 
 @app.route('/search', methods=["GET", "POST"])
@@ -439,6 +453,10 @@ def quick_search():
     recipes = [ShortRecipe(recipe) for recipe in saved_recipes]
     return render_template('recipes/filter-recipes.html', recipes=recipes)
 
+# @app.route(f"/search/filter")
+# def filter_recipes_by_tag():
+#     """Filters recipes by tag or diet name... not sure yet this is my test route."""
+
 ######################################################################### Recipe helper functions:
 
 def get_random_recipes(num):
@@ -473,6 +491,22 @@ def get_recipe(id):
     db.session.add(recipe)
     db.session.commit()
     return recipe
+
+def get_similar_recipes(id):
+    """Checks session for similar recipes, if none, get from API using recipe id and saves to session."""
+
+    if f"{id}" in session:
+        return [ShortRecipe(r) for r in session[f"{id}"]]
+
+    response = requests.get(f"{BASE_URL}/{id}/similar?apiKey={API_KEY}", params={"number": "4"})
+
+    resp = response.json()
+    id = f"{id}"
+    session[id] = resp
+    recipes = [ShortRecipe(r) for r in resp]
+
+    print(f"******************************************** SESSION   {session[id]} ********************************************************************************")
+    return recipes
 
 
 ######################################################################### Homepage and errors:
