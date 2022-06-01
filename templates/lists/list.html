@@ -95,7 +95,9 @@
         {% if g.user %}
             <div class="row-col-3">
                 <form class="recipe-form" method="POST">
+                  {% if g.user and g.user.id = list.user_id %}
                     <button id="trash" data-recipe="{{ recipe.id }}" data-list="{{ list.id }}" class="bottom-trash btn btn-md btn-link text-danger bi bi-trash me-4 pt-0"></button>
+                  {% endif %}
 
                     <button id="heart" class="btn btn-lg btn-link px-1 bi bi-heart-fill
                     {{'fav' if recipe in g.user.favorites else 'not-fav'}}" data-id="{{ recipe.id }}">
@@ -133,7 +135,7 @@
               <ul class="list-group list-group-flush">
                 <li class="list-group-item row row-cols-2 pt-0">
                     <span class="lead fs-6">READY IN:</span>
-                    <small class="text-right">{{ recipe.readyInMinutes}} mins</small>
+                    <small class="text-right">{{ recipe.total_min}} mins</small>
                 </li>
                 <li class="list-group-item row row-cols-2 pb-0"><span class="lead fs-6">SERVINGS:</span><small class="text-right">{{ recipe.servings }}</small>
                 </li>
