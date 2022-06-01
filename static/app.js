@@ -54,6 +54,8 @@ async function handleClick(e) {
 
     const data = e.target.dataset
 
+    console.log("origin", window.location.origin)
+
     if(e.target.classList.contains('bi-heart-fill')) {
         e.preventDefault()
         const res = await sendPostRequest("recipes/favorite", data);

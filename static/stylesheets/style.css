@@ -32,6 +32,10 @@ a:hover {
 
 /***** Recipes  ******************************/
 
+#recipe-header {
+    max-height: 400px;
+}
+
 .recipes-image {
     opacity: .9;
 }
@@ -151,7 +155,7 @@ a:hover {
     height: 360px;
     margin-top: 0px;
     background-size: cover;
-    background-position: center;
+    background-position: bottom;
 }
 
 #list-image, #recipe-image {

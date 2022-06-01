@@ -6,7 +6,7 @@
 {% if recipe %}
 
 <div class="card">
-<div id="recipe-header" class="full-width w-100 overflow-hidden position-relative card-image-top"><img src="{{ recipe.image_url}}" alt="image for {{ recipe.title }}" class="vw-100" id="recipe-image">
+<div id="recipe-header" class="full-width overflow-hidden card-image-top h-auto"><img src="{{ recipe.image_url}}" alt="image for {{ recipe.title }}" class="vw-100 img-fluid" id="recipe-image">
     <div id="recipe-heading" class="position-absolute bottom-0">
         <div class="display-2 text-uppercase">{{ recipe.title }}</div>
         {% if g.user %}
