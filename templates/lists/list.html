@@ -7,7 +7,7 @@
 <div class="row my-3 gap-3 align-items-end">
   <div class="col-sm-12 col-md-5 col-lg-auto">
       <span class="display-6">{{ list.name }}</span>
-      {% if g.user and g.user.id == list.user.id %}
+      {% if g.user and g.user.id == list.user_id %}
       <a class="small ps-2 text-dark" href="{{ url_for('edit_list', id=list.id)}}"><i class="bi bi-pencil"></i></a>
       <a class="small ps-2" href="{{ url_for('delete_list', id=list.id) }}"><i class="text-danger bi bi-trash"></i></a>
       {% endif %}
@@ -92,10 +92,9 @@
             </div>
           </div>
         {% endif %}
-        {% if g.user %}
             <div class="row-col-3">
                 <form class="recipe-form" method="POST">
-                  {% if g.user and g.user.id = list.user_id %}
+                  {% if g.user and g.user.id == list.user_id %}
                     <button id="trash" data-recipe="{{ recipe.id }}" data-list="{{ list.id }}" class="bottom-trash btn btn-md btn-link text-danger bi bi-trash me-4 pt-0"></button>
                   {% endif %}
 
@@ -113,24 +112,26 @@
                       <button type="button" class="btn btn-link btn-lg p-0" data-bs-toggle="dropdown" aria-expanded="false"><i class="bi bi-bookmark-plus-fill ps-1"></i>
                       </button>
                       <ul class="dropdown-menu">
-                      {% for list in g.user.lists %}
+                        {% if g.user %}
+                        {% if g.user.lists | length > 0 %}
+                        {% for list in g.user.lists %}
                           {% if not list.has_recipe(recipe.id) %}
                           <li data-list="{{ list.id }}" data-recipe="{{ recipe.id }}" class="dropdown-item">
                             {{ list.name }}
                           </li>
-                          {% else %}
-                          {% endif %}
-                      {% endfor %}
-                      {% if g.user.lists | length > 0 %}
-                          <li><hr class="dropdown-divider"></li>
-                      {% endif %}
+                            {% endif %}
+                        {% endfor %}
+                        <li><hr class="dropdown-divider"></li>
+                        {% endif %}
                           <li class="nav-item"><a class="nav-link" href="{{ url_for('add_list') }}">Create New List</a></li>
+                          {% else %}
+                          <li class="nav-item"><a href="{{ url_for('signup') }}">Signup</a> or <a href="{{ url_for('login') }}">login</a> to start creating lists.</li>
+                          {% endif %}
                       </ul>
                   </div>
                 </form>
             </div>
           </div>
-            {% endif %}
             <div class="card-footer bg-body">
               <ul class="list-group list-group-flush">
                 <li class="list-group-item row row-cols-2 pt-0">

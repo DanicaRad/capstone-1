@@ -289,7 +289,7 @@ def show_list(id):
     if list.private == False:
         return render_template("lists/list.html", list=list, top_tags=top_tags)
 
-    if list.user_id == g.user.id:
+    if g.user and list.user_id == g.user.id:
         return render_template("lists/list.html", list=list, top_tags=top_tags)
 
     flash("This list is private", "danger")
