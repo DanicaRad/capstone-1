@@ -1,10 +1,9 @@
 /API_notes.txt
+/helpers
 /venv
 /seed.py 
 /__pycache__
 /requirements3.txt
-/dumplocaldb 
-/spoonacular.dump
+/dumplocaldb
 /seed.py
 /migrations/__pycache__
-
