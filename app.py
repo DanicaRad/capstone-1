@@ -286,13 +286,8 @@ def show_list(id):
     user = list.user
     top_tags = user.top_tags(list.recipes)
 
-    if not g.user:
-
-        if list.private == False:
-            return render_template("lists/list.html", list=list, top_tags=top_tags)
-
-        flash("This list is private", "danger")
-        return redirect('/signup')
+    if list.private == False:
+        return render_template("lists/list.html", list=list, top_tags=top_tags)
 
     if list.user_id == g.user.id:
         return render_template("lists/list.html", list=list, top_tags=top_tags)
