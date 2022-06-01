@@ -12,10 +12,10 @@
 
 {% block show_lists %}
 
-<div class="row row-cols-lg-auto row-cols-md-2 row-cols-sm-1 g-2 justify-content-evenly">
+<div class="row row-cols-lg-4 row-cols-md-2 row-cols-sm-1 justify-content-evenly">
     {% for list in lists %}
-  <div class="col-3">
-    <div class="card list-card" id="{{ list.id }}" style="width: 16rem;">
+  <div class="col-sm-12 col-md-6 col-lg-3 card-deck">
+    <div class="card list-card" id="{{ list.id }}">
       <a href="{{ url_for('show_list', id=list.id) }}">
         <img src="{{ list.image_url }}" class="card-img-top" alt="recipe list image">
         </a>
