@@ -1,6 +1,6 @@
 const API_KEY = '979dfa9f09634c8faf4ba8e387c1b0ab'
 const RANDOM_URL = 'https://api.spoonacular.com/recipes/random?apiKey=979dfa9f09634c8faf4ba8e387c1b0ab'
-const BASE_URL = 'http://127.0.0.1:5000'
+const BASE_URL = window.location.origin
 
 const ALERT = document.getElementById('js-alert')
 
@@ -51,7 +51,6 @@ recipeForm.forEach(recipe => {
 
 // handles edit list list click, sends post request, updates HTML if request successful
 async function handleClick(e) {
-    // e.preventDefault();
 
     const data = e.target.dataset
 
