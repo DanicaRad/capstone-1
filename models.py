@@ -1,18 +1,15 @@
 """SQLAlchemy models for Spoonacular."""
 
-from cgitb import text
-from typing import Text
 from flask_bcrypt import Bcrypt
 from flask_sqlalchemy import SQLAlchemy
-from sqlalchemy.dialects.postgresql import ARRAY
 
 from fractions import Fraction
-import math
 from bs4 import BeautifulSoup
+from sqlalchemy import ForeignKey
+from data.search_params import res_tags, tags, diets
 
 bcrypt = Bcrypt()
 db = SQLAlchemy()
-
 
 class RecipeList(db.Model):
     """Maps recipes to lists."""
@@ -30,6 +27,122 @@ class RecipeList(db.Model):
         db.ForeignKey("recipes.id", ondelete="cascade"),
         primary_key=True
     )
+
+class RecipeTags(db.Model):
+
+    __tablename__ = "recipe_tags"
+
+    recipe_id = db.Column(db.Integer, db.ForeignKey("recipes.id", ondelete="cascade"), primary_key=True)
+
+    tag_id = db.Column(db.Integer, db.ForeignKey("tags.id", ondelete="cascade"), primary_key=True)
+
+    def __repr__(self):
+        return f"< recipe #{self.recipe_id} tag #{self.tag_id}>"
+
+    @classmethod
+    def get_recipe_tags(cls, resp):
+        """Gets recipe tags from API response, saves to DB."""
+
+        data_tags = {res_tags[tag].casefold() for tag in res_tags if resp[tag] == True}
+
+        resp_diets = {tag[1].casefold() for tag in tags if tag[1].casefold() in resp['diets']}
+
+        tag_names = [item for item in (data_tags | resp_diets)]
+
+        tag_ids = Tag.query.filter(Tag.tag_name.in_(tag_names)).all()
+
+        recipe_tags = [RecipeTags(recipe_id=resp['id'], tag_id=tag.id) for tag in tag_ids]
+        
+        db.session.add_all(recipe_tags)
+        db.session.commit()
+    
+    @classmethod
+    def get_tags(cls, recipe):
+        """Makes RecipeTags for recipe already in DB with Recipe.tags. For filling in missing data from fouled API queries."""
+
+        recipe_tags = [item for item in recipe.tags]
+        tag_ids = Tag.query.filter(Tag.tag_name.in_(recipe_tags)).all()
+
+        tags = [RecipeTags(recipe_id=recipe.id, tag_id=tag.id) for tag in tag_ids]
+        db.session.add_all(tags)
+        db.session.commit()
+
+class SimilarRecipes(db.Model):
+    """Model for similar recipe pairs."""
+
+    __tablename__ = "similar"
+
+    recipe_id = db.Column(db.Integer, db.ForeignKey("recipes.id", ondelete="cascade"), primary_key=True)
+
+    similar_id = db.Column(db.Integer, db.ForeignKey("recipes.id", ondelete="cascade"), primary_key=True)
+
+    def __repr__(self):
+        return f"<recipe #{self.recipe_id}, similar #{self.similar_id}>"
+
+    @classmethod
+    def add_similar(cls, id, s_id):
+        """Checks if similar relationship already in db, adds if not. Calls reverse simmilar method."""
+
+        similar = SimilarRecipes.query.filter(SimilarRecipes.recipe_id == id, SimilarRecipes.similar_id == s_id).first()
+
+        if not similar:
+            similar = SimilarRecipes(recipe_id=id, similar_id=s_id)
+            
+            db.session.add(similar)
+            db.session.commit()
+
+        cls.reverse_similar(id, s_id)
+        return
+
+    @classmethod
+    def reverse_similar(cls, id, s_id):
+        """Uses ids from SimilarRecipe instance to see if reverse relationship is in db. If not, adds."""
+
+        rev_similar = SimilarRecipes.query.filter(SimilarRecipes.recipe_id == s_id, SimilarRecipes.similar_id == id).first()
+
+        if not rev_similar:
+            reversed_similar = SimilarRecipes(recipe_id=s_id, similar_id=id)
+            
+            db.session.add(reversed_similar)
+            db.session.commit()
+
+        return None
+
+
+class Tag(db.Model):
+
+    __tablename__ = "tags"
+    
+    id = db.Column(db.Integer, primary_key=True, autoincrement=True)
+
+    tag_name = db.Column(db.Text, unique=True)
+
+    def __repr__(self):
+        return f"{self.tag_name}"
+
+    @classmethod
+    def make_tag(cls, name):
+
+        tag = Tag(tag_name=name)
+
+        return tag
+
+    def get_name(self):
+        """Returns tag name from camel case API tag_name"""
+
+        for tag in tags:
+            if self.tag_name == tag[0]:
+                return tag[1]
+
+def make_tags_table(tags):
+    """Gets tags for Tag table."""
+
+    tag_names = [tag[1].casefold() for tag in tags]
+
+    all_tags = [Tag(tag_name=name) for name in tag_names]
+
+    db.session.add_all(all_tags)
+    db.session.commit()
 
 class Favorites(db.Model):
     """Model for user favorite recipes."""
@@ -93,6 +206,9 @@ class Recipe(db.Model):
 
     score = db.Column(db.Integer)
 
+    likes = db.Column(db.Integer, default=0)
+
+    health_score = db.Column(db.Integer)
 
     lists = db.relationship(
         'List',
@@ -101,6 +217,21 @@ class Recipe(db.Model):
     )
 
     favorites = db.relationship("Favorites")
+
+    recipe_tags = db.relationship(
+        'Tag',
+        secondary='recipe_tags',
+        primaryjoin=(RecipeTags.recipe_id == id),
+        secondaryjoin=(RecipeTags.tag_id == Tag.id),
+        cascade='all, delete'
+    )
+
+    similar = db.relationship(
+        "Recipe",
+        secondary="similar",
+        primaryjoin=(SimilarRecipes.similar_id == id),
+        secondaryjoin=(SimilarRecipes.recipe_id == id)
+    )
 
     def __repr__(self):
         return f"<# {self.id} title: {self.title}>"
@@ -139,32 +270,36 @@ class Recipe(db.Model):
 
         tags = cls.get_tags(res)
 
-        score = res['spoonacularScore']
+        score = res.get('spoonacularScore', None)
+
+        likes = res['aggregateLikes']
+
+        health_score = res['healthScore']
     
+        return Recipe(id=id, title=title, source=source, source_url=source_url, image_url=image_url, summary=summary, instructions=instructions, total_min=total_min, servings=servings, ingredients=ingredients, us=us, metric=metric, dish=dish, diets=diets, tags=tags, score=score, likes=likes, health_score=health_score)
 
-        return Recipe(id=id, title=title, source=source, source_url=source_url, image_url=image_url, summary=summary, instructions=instructions, total_min=total_min, servings=servings, ingredients=ingredients, us=us, metric=metric, dish=dish, diets=diets, tags=tags, score=score)
+    @property
+    def total_likes(self):
+        """Aggregate recipe likes from API and user likes from app."""
 
-    @classmethod
-    def find_recipe(cls, id):
-        """Find recipe by id. If recipe not in db, return false, otherwise return recipe."""
+        if self.favorites:
+            return self.likes + len(self.favorites)
 
-        recipe = cls.query.filter_by(id=id).first()
-
-        if recipe:
-            return recipe
-
-        return False
+        return self.likes
 
     @classmethod
     def strip_HTML(cls, res):
         """Uses BeautifulSoup library to remove all HTML elements from text."""
 
-        soup = BeautifulSoup(res)
+        soup = BeautifulSoup(res, "html.parser")
         return soup.get_text()
 
     @classmethod
     def clean_summary(cls, res):
         """Cleans HTML from response text and formats sentences to split cleanly for HTML rendering."""
+
+        if not res:
+            return None
 
         split = res.split('. ')
 
@@ -176,18 +311,23 @@ class Recipe(db.Model):
     def clean_inst(cls, res):
         """Removes HTML list tags and replaces with `.` for clean HTML list rendering."""
 
-        no_l1 = res.replace(".</li>", ".")
-        no_l2 = no_l1.replace(".</ul>", ".")
-        no_ol = no_l2.replace('.</ol', ".")
-        no_ul = no_ol.replace('.<ul>', ".")
-        no_els = no_ul.replace("...", ".")
-        no_pa = no_els.replace(".)", ").")
-        no_p = no_pa.replace("</p>", "")
-        split = no_p.split('. ')
+        if res:
 
-        str = ".".join([str for str in split if "<a" not in str and len(str) > 1])
+            no_l1 = res.replace("</li>", ".")
+            no_l2 = no_l1.replace("</ul>", ".")
+            no_ol = no_l2.replace('</ol>', ".")
+            no_ul = no_ol.replace('<ul>', ".")
+            no_els = no_ul.replace("...", ".")
+            no_pa = no_els.replace(".)", ").")
+            no_p = no_pa.replace("</p>", ".")
+            stripped = no_p.replace("..", ".")
+            split = stripped.split('. ')
 
-        return cls.strip_HTML(str[0:-1])
+            str = ".".join([str for str in split if "<a" not in str and len(str) > 1])
+
+            return cls.strip_HTML(str[0:-1])
+
+        return None
 
     @classmethod
     def get_ingredients(cls, res, ms):
@@ -212,19 +352,35 @@ class Recipe(db.Model):
 
     @classmethod
     def get_tags(cls, res):
-        """Get recipe tags."""
+        """Get recipe tags from response data. Checks response['diets'] and response[f"{tag}"] for completeness."""
 
-        tags = {'dairyFree': 'Dairy Free',
-        'glutenFree': 'Gluten Free',
-        'vegetarian': 'Vegetarian',
-        'vegan': 'Vegan'}
+        tags = {res_tags[tag].casefold() for tag in res_tags if res[tag] == True}
+        diets = {diet.casefold() for diet in res['diets']}
 
-        return [tags[tag] for tag in tags if res[tag] == True]
+        return [item for item in (tags | diets)]
 
-    def favs(self):
-        """Return number of `likes` or favorites recipe has."""
+    def has_tag(self, tag):
+        """Return recipe if tag in recipe.tags"""
 
-        return len(self.favorites)
+        tags = self.tags
+
+        if tag in tags:
+            return True
+
+        return False
+
+    @classmethod
+    def sort_by(cls, sort, ids):
+        """Sorts recipes by sort arg."""
+
+        sorted = [recipe for recipe in Recipe.query.filter(Recipe.id.in_(ids)).order_by(sort)]
+
+        if sort == "total_min":
+            return sorted
+
+        sorted.reverse()
+
+        return sorted
 
 
 class List(db.Model):
@@ -270,6 +426,18 @@ class List(db.Model):
         if id in ids:
             return True
         return False
+
+    def top_tags(self):
+        """Get top dietary tags in list."""
+
+        all_tags = [tag[1] for tag in tags]
+
+        tags_lists = [tag for tag in (r.tags for r in self.recipes if r.tags)]
+        user_tags = [tag for sublist in tags_lists for tag in sublist]
+        sorted_tags = sorted([(tag, user_tags.count(tag.casefold())) for tag in all_tags], key=lambda tag: tag[1])
+        sorted_tags.reverse()
+
+        return [tag[0] for tag in sorted_tags[0:5]]
 
 
 
@@ -351,6 +519,18 @@ class User(db.Model):
                 return user
 
         return False
+
+    def top_tags(self, recipes):
+        """Get user's top dietary tags based on favorite recipes"""
+
+        all_tags = [tag[1] for tag in tags]
+
+        tags_lists = [tag for tag in (r.tags for r in recipes if r.tags)]
+        user_tags = [tag for sublist in tags_lists for tag in sublist]
+        sorted_tags = sorted([(tag, user_tags.count(tag.casefold())) for tag in all_tags], key=lambda tag: tag[1])
+        sorted_tags.reverse()
+
+        return [tag[0] for tag in sorted_tags[0:5]]
 
 def connect_db(app):
     """Connect this database to provided Flask app."""

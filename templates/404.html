@@ -1,5 +1,13 @@
 {% extends 'base.html' %}
 
+{% block title %}Page Not Found{% endblock %}
+
 {% block content %}
-<div class="display-3">Page Not Found.</div>
+<div class="row align-items-center mt-0 pt-0" style="height: 50vh;">
+{% if var %}
+    <div class="display-3">{{var}} Not Found.</div>
+{% else %}
+    <div class="display-3">Page Not Found.</div>
+{% endif %}
+</div>
 {% endblock %}

@@ -1,0 +1,31 @@
+{% extends 'recipes/recipes.html' %}
+
+{% block title %}{% if query %}{{ query }} {% endif %}recipe search{% endblock %}
+
+{% block filter_recipes %}
+
+{% if query %}
+<h3 class="my-3">Search results for {{ query }}:</h3>
+{% endif %}
+
+<div class="row justify-content-start row-cols-sm-2 row-cols-md-6 row-cols-lg-auto mt-2 mb-0 pb-0 g-0">
+    <div class="col-auto">
+        <div class="dropdown">
+            <button class="btn btn-outline-dark dropdown-toggle py-0 px-1 ms-1 me-3" type="button" id="dropdownMenuButton1" data-bs-toggle="dropdown" aria-expanded="false">
+                <i class="bi bi-sort-down fs-5"></i>
+            </button>
+            <ul class="dropdown-menu" aria-labelledby="dropdownMenuButton1">
+              <li><a class="dropdown-item" href="{{ url_for('sort_search', query=query, sort='likes') }}">Most Popular</a></li>
+              <li><a class="dropdown-item" href="{{ url_for('sort_search', query=query, sort='health_score') }}">Most Nutritious</a></li>
+              <li><a class="dropdown-item" href="{{ url_for('sort_search', query=query, sort='total_min') }}">Total Cook Time</a></li>
+            </ul>
+        </div>
+    </div>
+{% for tag in tags %}
+    <div class="col-auto">
+        <a href="{{ url_for('filter_by_tag', tag=tag.tag_name)}}" class="badge text-bg-light p-2 m-1 text-uppercase tag" data-tag="{{ tag.tag_name }}" data-selected="false">{{ tag.tag_name }}</a>
+    </div>
+{% endfor %}
+</div>
+
+{% endblock %}

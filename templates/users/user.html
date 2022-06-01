@@ -1,65 +1,102 @@
-{% extends 'base.html' %}
-{% block title %}Show User Profile Page{% endblock %}
+{% extends 'lists/lists-base.html' %}
+{% block title %}{{ user.username }}'s Profile{% endblock %}
 
 {% block content %}
+
 <div class="container mt-3">
-    <div class="row align-items-center">
-        <div class="col-sm-3" style="height: 200px">
-            <img id="profile-img" class="mr-3" src="{{ user.image_url if user.image_url else '/static/images/default-user-image.svg'}}" alt="user image">
-        </div>
-        <div class="col-sm-auto">
-            <h5>{{ user.username }}</h5>
-            {% if user.bio %}
-                <p>{{ user.bio }}</p>
-            {% else %}
-                <p>Update your profile to add your bio.</p>
-            {% endif %}
+    <div class="row align-items-end justify-content-start">
+        <div class="col-sm-12 col-md-4 col-lg-auto pe-5">
             {% if g.user.id == user.id %}
-            <a class="btn btn-sm btn-secondary" href="/users/profile">Edit Profile</a>
+                    <a class="text-secondary pb-2" id="edit-profile" href="/users/profile"><i class="bi bi-pencil"></i></a>
+            {% endif %}
+            <figure class="figure">
+                <img id="profile-img" class="img-fluid figure-img" src="{{ user.image_url if user.image_url else '/static/images/default-user-image.svg'}}" alt="user image">
+                <figcaption class="figure-caption text-center">
+                    <span class="display-6 text-dark">{{ user.username }}</span>
+                </figcaption>
+            </figure>
+        </div>
+        <div class="col-sm-12 col-md-7 col-lg-auto ps-5">
+            <div class="row mb-5">
+            {% if user.bio %}
+                <blockquote class="blockquote">{{ user.bio }}</blockquote>
+            {% else %}
+                {% if g.user.id == user.id %}
+                    <p>Update your profile to add your bio.</p>
+                {% endif %}
+            {% endif %}
+            </div>
+            {% if fav_tags %}
+            <div class="row my-2">
+                <div class="col-sm-12 col-md-8 col-lg-auto">
+                    <p>
+                        TOP DIETARY PREFERENCES 
+                        {% for tag in fav_tags %}
+                            <small class="badge bg-light text-dark p-2 ms-2 text-uppercase fw-light">{{ tag }}</small>
+                        {% endfor %}
+                    </p>
+                </div>
+            </div>
             {% endif %}
         </div>
     </div>
+    </div>
+</div>
 </div>
 
-    <div class="card-group row mt-5">
+{% if g.user and g.user.id == user.id %}
+    <div class="card-group row mt-4">
         <div class="card-deck col-6 ps-5">
             <div class="card">
-                {% if g.user.id == user.id %}
-                {% if user.favorites %}
                 <h5 class="card-header bg-dark text-light lead m-3">FAVORITES</h5>
-                <div class="card-body" id="ingredients">
-                    {% for recipe in user.favorites %}
-                    <p><a href="{{ url_for('recipe_info', id=recipe.id) }}" class="text-dark btn-link">{{ recipe.title }}</a></p>
-                    {% endfor %}
+                <div class="card-body">
+                    {% if user.favorites | length > 5 %}
+                        {% for recipe in user.favorites[0:5] %}
+                            <p><a href="{{ url_for('recipe_info', id=recipe.id) }}" class="text-dark btn-link">{{ recipe.title }}</a></p>
+                        {% endfor %}
+                        <a class="btn btn-danger btn-sm fs-6 opacity-75" href="{{ url_for('favorites')}}"><span class="fs-6 lead">VIEW {{ user.favorites | length - 5 }} MORE . . . </span></a>
+                    {% elif not user.favorites %}
+                        <div class="lead fs-4 my-3">You don't have any favorites yet. <a href="/">Browse recipes</a> to get cooking!</div>
+                    {% else %}
+                        {% for recipe in user.favorites %}
+                            <p><a href="{{ url_for('recipe_info', id=recipe.id) }}" class="text-dark btn-link">{{ recipe.title }}</a></p>
+                        {% endfor %}
+                    {% endif %}
                 </div>
-                {% endif %}
-                {% endif %}
             </div>
         </div>
     
         <div class="card-deck col-6 pe-5">
             <div class="card">
-                {% if user.lists %}
-                {% if g.user.id == user.id %}
                 <h5 class="lead card-header bg-dark text-light m-3 text-center">LISTS</h5>
                 <div class="card-body">
-                    {% for list in user.lists %}
-                    <p><a href="{{ url_for('show_list', id=list.id) }}" class="btn-link text-dark">{{ list.name }}</a></p>
-                    {% endfor %}
-                </div>
-                {% else %}
-                <h5 class="lead card-header bg-dark text-light m-3 text-center">LISTS</h5>
-                <div class="card-body">
-                    {% for list in user.lists %}
-                    {% if list.private == False %}
-                    <p><a href="{{ url_for('show_list', id=list.id) }}" class="btn-link text-dark">{{ list.name }}</a></p>
+                    {% if user.lists %}
+                        {% for list in user.lists %}
+                            <p><a href="{{ url_for('show_list', id=list.id) }}" class="btn-link text-dark">{{ list.name }}</a></p>
+                        {% endfor %}
+                    {% else %}
+                        <div class="lead fs-4 my-3">You haven't made any lists yet. <a href="/">Browse recipes</a> or get inspired by <a href="{{ url_for('show_all_lists') }}">other users' lists</a> to get cooking!</div>
                     {% endif %}
-                    {% endfor %}
                 </div>
-                {% endif %}
-                {% endif %}
             </div>
         </div>
     </div>
+
+{% else %}
+    <div class="container">
+        <div class="vstack gap-3 mt-3 mb-5">
+            <div class="border-bottom p-3 full-width lead text-uppercase">
+                {{user.username }}'s LISTS
+            </div>
+            {% if lists %}
+                {% block show_lists %}
+                    {{ super() }}
+                {% endblock %}
+            {% else %}
+            <div class="lead fs-4 my-3 mx-auto">{{ user.username }} hasn't made any lists yet. Check out these <a href="{{ url_for('show_all_lists') }}">other users' lists</a> to get cooking!</div>
+            {% endif %}
+        </div>
+    </div>
+{% endif %}
 
 {% endblock %}

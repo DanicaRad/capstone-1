@@ -1,12 +1,14 @@
 {% extends 'base.html' %}
 
+{% block title %}Search Recipes{% endblock %}
+
 {% block content %}
 
 <div class="row justify-content-md-center">
     <div class="col-md-8 col-lg-8">
       <h2 class="join-message">It's ok to be picky.</h2>
 
-      <form method="POST" action="{{ url_for('detailed_search') }}">
+      <form method="POST" action="{{ url_for('search_form') }}">
         {{ form.hidden_tag() }}
 
         {% for field in form if field.widget.input_type != 'hidden' %}
@@ -23,7 +25,7 @@
             {% endif %}
         {% endfor %}
 
-        <button class="btn btn-primary btn-block btn-md mt-3">Search</button>
+        <button class="btn btn-dark btn-block btn-sm mt-3">SEARCH</button>
       </form>
     </div>
   </div>

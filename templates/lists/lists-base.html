@@ -1,26 +1,51 @@
-{% extends 'base.html' %}
+{% extends 'recipes/recipes.html' %}
 
 {% block title %}Base List Template{% endblock %}
 
 {% block content %}
 
-<!-- This is going to be the all-lists page -->
+{% block users_lists %}
+{% endblock %}
 
-<div class="display-5 mb-4">Get inspired with curated user lists</div>
+{% block all_lists %}
+{% endblock %}
 
 {% block show_lists %}
 
-<div class="row row-cols-lg-4 row-cols-md-2 row-cols-sm-1 g-4 justify-content-evenly">
+<div class="row row-cols-lg-auto row-cols-md-2 row-cols-sm-1 g-2 justify-content-evenly">
     {% for list in lists %}
   <div class="col-3">
     <div class="card list-card" id="{{ list.id }}" style="width: 16rem;">
+      <a href="{{ url_for('show_list', id=list.id) }}">
         <img src="{{ list.image_url }}" class="card-img-top" alt="recipe list image">
-        <div class="card-body">
-          <a href="{{ url_for('show_list', id=list.id) }}"><h5 class="card-title">{{ list.name }}</h5></a>
-          {% if list.description %}
-          <p class="card-text">{{ list.description }}</p>
-          {% endif %}
-          <small>{{ list.user.username }}</small>
+        </a>
+        <div class="card-body pb-1">
+          <div class="mb-1">
+            <div>
+              <a class="card-title fs-6 lead fw-bolder text-uppercase text-dark" href="{{ url_for('show_list', id=list.id) }}">{{ list.name }}</a>
+              {% if g.user and g.user.id == list.user.id %}
+                <a class="text-dark small" href="{{ url_for('edit_list', id=list.id)}}"><i class="bi bi-pencil"></i></a>
+              {% endif %}
+            </div>
+            {% if list.description %}
+            <p class="card-text">{{ list.description }}</p>
+            {% endif %}
+            <a href="{{ url_for('show_user', id=list.user.id) }}">
+              <img src="{{ list.user.image_url }}" alt="image for {{ list.user.username }}" style="width: 1.5rem; border-radius: 100%;">
+              <small class="text-dark btn-link ps-1">{{ list.user.username }}</small></a>
+            {% if g.user %}
+              {% if g.user.id == list.user_id %}
+              <form class="delete-list" method="POST">
+                <button id="trash" data-id="{{ list.id }}" class="top-trash btn btn-link text-danger bi bi-trash"></button>
+              </form>
+              {% endif %}
+            {% endif %}
+          </div>
+          <div class="mt-2 mb-1">
+            {% for tag in list.top_tags() %}
+            <small class="badge bg-light text-dark text-uppercase fw-light">{{ tag }}</small>
+            {% endfor %}
+          </div>
         </div>
         {% if not recipe %}
         <ul class="list-group list-group-flush">

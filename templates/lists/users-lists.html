@@ -1,0 +1,22 @@
+{% extends 'lists/lists-base.html' %}
+
+{% block title %}{{ g.user.username }}s' Lists{% endblock %}
+
+{% block users_lists %}
+
+{% if lists %}
+    {% if g.user.username == username %}
+        <div class="display-6 my-3">Your Lists</div>
+        {% else %}
+     <div class="display-6 my-3">{{ username }}'s Lists</div>
+    {% endif %}
+{% else %}
+    <div class="row align-items-center mt-0 pt-0" style="height: 50vh;">
+    {% if g.user.username == username %}
+        <div class="display-6">You haven't made any lists yet. <a href="/">Browse recipes</a> or get inspired by <a href="{{ url_for('show_all_lists') }}">other users' lists</a> to get cooking!</div>
+    {% else %}
+        <div class="display-6">{{ username }} hasn't made any lists yet.</div>
+    {% endif %}
+    </div>
+{% endif %}
+{% endblock %}

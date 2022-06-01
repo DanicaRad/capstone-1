@@ -1,0 +1,17 @@
+{% extends 'base.html' %}
+
+{% block content %} 
+
+<p>PARAMS</p>
+<p>{{ params }}</p>
+<p>QUERY: {{ query }}</p>
+
+{% for tag in g.tags %}
+{% if filters %}
+<a href="{{ url_for('filter_recipes', tag=tag) }}" class="badge text-dark text-uppercase {{ 'bg-dark' if tag in filters else 'bg-light' }}">{{ tag }}</a>
+{% else %} 
+<a href="{{ url_for('filter_recipes', tag=tag) }}" class="badge bg-light text-dark text-uppercase">{{ tag }}</a>
+{% endif %}
+{% endfor %}
+
+{% endblock %}

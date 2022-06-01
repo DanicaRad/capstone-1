@@ -1,8 +1,9 @@
 """Forms for recipe search."""
 
 from flask_wtf import FlaskForm
-from wtforms import StringField, SelectField, SelectMultipleField, PasswordField, TextAreaField, BooleanField
+from wtforms import StringField, SelectField, SelectMultipleField, PasswordField, TextAreaField, BooleanField, HiddenField
 from wtforms.validators import Optional, DataRequired, Email, Length
+from flask import request
 from data.search_params import cuisines, intolerances, diets, type, sort
 
 class UserAddForm(FlaskForm):
@@ -31,6 +32,7 @@ class ListForm(FlaskForm):
     name = StringField('List Name', validators=[DataRequired()])
     description = TextAreaField('Description', validators=[Optional()])
     private = BooleanField('Private', validators=[Optional()])
+    request_referrer = HiddenField('request referrer', validators=[DataRequired()])
 
 class AddRecipeForm(FlaskForm):
     """Form to add recipe to user list."""
@@ -47,7 +49,8 @@ class SearchForm(FlaskForm):
     type = SelectField(
                     'Dish Type',
                     choices=type,
-                    validators=[Optional()])
+                    validators=[Optional()],
+                    default=None)
 
     cuisine = SelectMultipleField(
                     'Cuisine',

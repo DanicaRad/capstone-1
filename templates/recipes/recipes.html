@@ -1,5 +1,5 @@
 {% extends 'base.html' %}
-{% block title %}Show Recipes Base Template{% endblock %}
+{% block title %}Recipes{% endblock %}
 
 {% block content %}
 
@@ -9,39 +9,46 @@
 {% block user_favorites %}
 {% endblock %}
 
-{% if recipes %}
-<div class="row">
+{% block filters %}
+{% endblock %}
 
+{% block recipes %}
+{% if recipes %}
+<div class="row row-cols-lg-4 row-cols-md-2 row-cols-sm-1 g-3 mt-1 justify-content-evenly">
 {% for recipe in recipes %}
-<div class="col-sm-3 card-deck mb-3">
-<div class="card recipe-card">
+<div class="col-sm-12 col-md-6 col-lg-3 card-deck mb-3">
+<div class="card recipe-card" data-tags="{{ recipe.recipe_tags }}" data-id="{{ recipe.id }}" data-mins="{{ recipe.total_min}}">
     <a href="{{ url_for('recipe_info', id=recipe.id) }}"><img class="card-img-top recipes-image" src="{{ recipe.image_url }}" alt="Card image cap"></a>
     <div class="card-body">
-      <div class="card-title fs-6 lead fw-bolder text-uppercase">
-        <a class="stretched-link lead text-dark" href="{{ url_for('recipe_info', id=recipe.id) }}">{{ recipe.title }}</a>
+      <div class="card-title fs-6 lead fw-bolder text-uppercase mb-1">
+        <a class="lead text-dark" href="{{ url_for('recipe_info', id=recipe.id) }}">{{ recipe.title }}</a>
       </div>
-      <div class="card-text">
-        {% if recipe.score %}
-        <span class="badge rounded-pill bg-success fw-light">{{ recipe.score }}%</span>
+      <div class="card-text pb-0">
+        {% if recipe.health_score != None %}
+        <span class="badge bg-success rounded-pill opacity-75" data-bs-toggle="tooltip" title="Average nutrient coverage"><small class="align-top">{{ recipe.health_score }}% <span class="fw-light">HEALTH SCORE</span></small></span>
         {% endif %}
         {% if recipe.tags %}
           {% for tag in recipe.tags %}
-          <span class="badge bg-light text-dark text-uppercase">{{ tag }}</span>
+          <span class="badge bg-light text-dark text-uppercase fw-light mt-1">{{ tag }}</span>
           {% endfor %}
           {% endif %}
-    </div>
       </div>
+    </div>
 
       {% if g.user %}
 
       <div class="row">
           <form class="recipe-form" method="POST">
-              <button id="heart" class="btn btn-lg btn-link pe-1 bi bi-heart-fill
+              <button id="heart" aria-pressed="false" class="btn btn-lg btn-link pe-1 bi bi-heart-fill
                 {{'fav' if recipe in g.user.favorites else 'not-fav'}}" data-id="{{ recipe.id }}">
-              <!-- {% if recipe.favorites %} -->
-                  <!-- <span class="fav-count">{{ recipe.favs() }}</span> -->
-              <!-- {% endif %} -->
               </button>
+              <small class="likes-count" id="{{ recipe.id }}-likes">
+                {% if recipe.likes %}
+                  {{ recipe.likes }}
+                {% else %}
+                  0
+                {% endif %}
+              </small>
 
               <div class="btn-group lists-btn">
                   <button type="button" class="btn btn-link btn-lg p-0" data-bs-toggle="dropdown" aria-expanded="false"><i class="bi bi-bookmark-plus-fill ps-1"></i>
@@ -55,6 +62,10 @@
                       {% else %}
                       {% endif %}
                   {% endfor %}
+                  {% if g.user.lists | length > 0 %}
+                    <li><hr class="dropdown-divider"></li>
+                  {% endif %}
+                    <li class="nav-item"><a class="nav-link text-center" href="{{ url_for('add_list') }}">Create New List</a></li>
                   </ul>
               </div>
           </form>
@@ -64,7 +75,7 @@
       <ul class="list-group list-group-flush">
         <li class="list-group-item row row-cols-2 pt-0">
             <span class="lead fs-6">READY IN:</span>
-            <small class="text-right">{{ recipe.readyInMinutes}} mins</small>
+            <small class="text-right ps-0">{{ recipe.total_min }} mins</small>
         </li>
         <li class="list-group-item row row-cols-2 pb-0"><span class="lead fs-6">SERVINGS:</span><small class="text-right">{{ recipe.servings }}</small>
         </li>
@@ -78,5 +89,6 @@
     {% else %}
     <p>Sorry, we couldn't find any recipes that matched.</p>
 {% endif %}
+{% endblock %}
     
 {% endblock %}

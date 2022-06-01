@@ -2,50 +2,59 @@
 from http.client import HTTPException
 import os
 
-from flask import Flask, render_template, request, flash, redirect, jsonify, session, g, json
+from flask import Flask, render_template, request, flash, redirect, jsonify, session, g, url_for
+from flask_migrate import Migrate
 import requests
 import random
+import ast
 from flask_debugtoolbar import DebugToolbarExtension
 from sqlalchemy.exc import IntegrityError
-from helpers import ShortRecipe
 from forms import ListForm, SearchForm, UserAddForm, LoginForm, UserAddForm, UserEditForm
-from models import db, connect_db, User, List, Recipe, RecipeList, Favorites
-from data.search_params import diets
+from models import db, connect_db, User, List, Recipe, RecipeList, Favorites, Tag, RecipeTags, SimilarRecipes
 
 CURR_USER_KEY = "curr_user"
+BASE_URL = f"https://api.spoonacular.com/recipes"
+API_KEY = '979dfa9f09634c8faf4ba8e387c1b0ab'
+API_KEY2 = 'e9bf0ccc334c426094129c237e94055a'
+API_KEY3 = '5de13e67157c448f9608ba2c8d0b825c'
 
 app = Flask(__name__)
 
 app.config['TESTING'] = True
 
 app.config['SQLALCHEMY_DATABASE_URI'] = (
-    os.environ.get('DATABASE_URL', 'postgresql:///spoonacular'))
+    os.environ.get('DATABASE_URL', 'postgresql:///spoonacular').replace("postgres://", "postgresql://", 1))
 
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 app.config['SQLALCHEMY_ECHO'] = True
 app.config['DEBUG_TB_INTERCEPT_REDIRECTS'] = False
 app.config['SECRET_KEY'] = "Winnie"
 toolbar = DebugToolbarExtension(app)
-
-API_KEY = '979dfa9f09634c8faf4ba8e387c1b0ab'
-BASE_URL = f"https://api.spoonacular.com/recipes"
-SIMILAR_URL = f"https://api.spoonacular.com/recipes/similar?apiKey={API_KEY}"
+migrate = Migrate(app, db)
 
 connect_db(app)
 
 #########################################################################
 # User signup / login / logout 
 
+@app.before_first_request
+def add_apiKey_to_g():
+    """Adds API key to Flask global."""
+
+    g.API_KEY = API_KEY
+    session['API_KEY'] = API_KEY
+
 @app.before_request
-def add_user_to_g():
+def add_user_and_API_to_g():
     """If we're logged in, add curr user to Flask global."""
+
+    g.API_KEY = session['API_KEY']
 
     if CURR_USER_KEY in session:
         g.user = User.query.get(session[CURR_USER_KEY])
 
     else:
         g.user = None
-
 
 def do_login(user):
     """Log in user."""
@@ -127,9 +136,20 @@ def logout():
 def show_user(id):
     """Show user info/ profile page."""
 
+    if g.user:
+        if g.user.id == id:
+            fav_tags = g.user.top_tags(g.user.favorites) if g.user.favorites else None
+
+            return render_template('users/user.html', user=g.user, fav_tags=fav_tags)
+
+
     user = User.query.get_or_404(id)
 
-    return render_template('/users/user.html', user=user)
+    fav_tags = user.top_tags(user.favorites) if user.favorites else None
+
+    lists = [list for list in user.lists if user.lists and list.private == False]
+
+    return render_template('/users/user.html', user=user, fav_tags=fav_tags, lists=lists)
 
 @app.route('/users/profile', methods=['GET', 'POST'])
 def profile():
@@ -165,11 +185,12 @@ def favorites():
 
     if not g.user:
         flash("Access unauthorized", "danger")
-        return redirect('/')
+        return redirect(request.referrer)
 
     favorites = g.user.favorites
 
     return render_template('users/favorites.html', recipes=favorites)
+
 
 ########################################################################
 # List routes:
@@ -178,34 +199,76 @@ def favorites():
 def add_list():
     """Add a list for current user."""
 
+    back = request.referrer
+
     if not g.user:
         flash("You must signup or login to make a new recipe list.", "warning")
-        return redirect('/signup')
+        return redirect(back)
 
     form = ListForm()
+
     if form.validate_on_submit():
         name = form.name.data
         description = form.description.data or None
         private = form.private.data or False
         list = List(name=name, description=description, private=private, user_id=g.user.id)
+        back = form.request_referrer.data
 
         db.session.add(list)
         db.session.commit()
 
         flash(f"{list.name} created!", "success")
-        return redirect('/')
+        return redirect(back)
 
-    return render_template('lists/form.html', form=form)
+    return render_template('lists/form.html', form=form, back=back)
 
-@app.route('/users/<int:id>/lists')
-def users_lists(id):
+@app.route('/lists/<id>/edit', methods=['GET', 'POST'])
+def edit_list(id):
+    """Edit users list."""
+
+    back = request.referrer
+
+    if not g.user:
+        flash("Unauthorized action", "warning")
+        return redirect(back)
+
+    list = List.query.get_or_404(id)
+
+    if list.user.id != g.user.id:
+        flash("Unauthorized action", "warning")
+        return redirect(back)
+
+    form = ListForm(name=list.name, description=list.description, private=list.private)
+    
+    if form.validate_on_submit():
+       list.name = form.name.data or list.name
+       list.description = form.description.data or list.description
+       list.private = form.private.data or list.private
+       back = form.request_referrer.data
+
+       db.session.add(list)
+       db.session.commit()
+
+       flash("List updated!", "success")
+       return redirect(url_for('show_list', id=id))
+
+    return render_template('lists/edit.html', form=form, list=list, back=back)
+
+@app.route('/users/<username>/lists')
+def users_lists(username):
     """Shows user's own lists."""
 
-    if not g.user or g.user.id != id:
-        flash("Access unauthorized", "danger")
-        return redirect(f'/login')
+    if g.user.username == username:
+        lists = g.user.lists
+        return render_template('lists/users-lists.html', lists=lists, username=username)
 
-    return render_template('/lists/lists.html')
+    user = User.query.filter(User.username == username).first()
+
+    if not user:
+        return render_template('404.html', var=f"User {username}")
+
+    lists = List.query.filter(List.private == False, List.user_id == user.id).all()
+    return render_template('lists/users-lists.html', lists=lists, username=username)
 
 @app.route('/lists')
 def show_all_lists():
@@ -213,24 +276,26 @@ def show_all_lists():
 
     lists = List.query.filter(List.private == False).all()
 
-    return render_template('lists/lists-base.html', lists=lists, recipe=False)
+    return render_template('lists/all-lists.html', lists=lists, recipe=False)
 
 @app.route('/lists/<int:id>')
 def show_list(id):
     """Shows recipelist if list user is curr_user."""
 
     list = List.query.get_or_404(id)
+    user = list.user
+    top_tags = user.top_tags(list.recipes)
 
     if not g.user:
 
         if list.private == False:
-            return render_template("lists/list.html", list=list)
+            return render_template("lists/list.html", list=list, top_tags=top_tags)
 
         flash("This list is private", "danger")
         return redirect('/signup')
 
     if list.user_id == g.user.id:
-        return render_template("lists/list.html", list=list)
+        return render_template("lists/list.html", list=list, top_tags=top_tags)
 
     flash("This list is private", "danger")
     return redirect('/signup')
@@ -257,7 +322,8 @@ def delete_list(id):
     return redirect(f"/lists/{id}")
 
 
-########################################################################### AXIOS post request List routes
+########################################################################### 
+# AXIOS post request List routes
 
 @app.route('/lists/delete', methods=['GET', 'POST'])
 def delete_list_from_lists():
@@ -300,6 +366,10 @@ def delete_from_list():
             RecipeList.list_id == l_id,
             RecipeList.recipe_id == r_id).one()
 
+        if list.image_url == recipe.image_url:
+            list.image_url = list.recipes[1].image_url
+            db.session.add(list)
+
         db.session.delete(recipe_list)
         db.session.commit()
 
@@ -323,13 +393,18 @@ def add_to_list():
     if recipe in list.recipes:
         return(jsonify(message="Duplicate recipe."), 202)
 
+    if len(list.recipes) == 0:
+        list.image_url = recipe.image_url
+        db.session.add(list)
+
     recipe_list = RecipeList(list_id=l_id, recipe_id=recipe.id)
     db.session.add(recipe_list)
     db.session.commit()
 
     return(jsonify(message="Added to list!"), 200)
 
-########################################################################### AXIOS post request Recipe routes
+###########################################################################
+## AXIOS post request Recipe routes
 
 @app.route("/recipes/favorite", methods=["GET", "POST"])
 def add_or_delete_favorite():
@@ -346,118 +421,218 @@ def add_or_delete_favorite():
         if recipe in g.user.favorites:
             fav = Favorites.query.filter(Favorites.user_id == g.user.id,    Favorites.recipe_id == id).one()
 
+            recipe.likes = recipe.likes - 1
+
+            db.session.add(recipe)
             db.session.delete(fav)
             db.session.commit()
 
-            return (jsonify(message="Removed from favorites"), 200)
+            return (jsonify(message="Removed from favorites", likes=f"{recipe.likes}"), 200)
 
         newfav = Favorites(user_id=g.user.id, recipe_id=id)
+
+        recipe.likes = recipe.likes + 1
+        db.session.add(recipe)
+
         db.session.add(newfav)
         db.session.commit()
 
-        return (jsonify(message="Added to favorites!"), 200)
+
+        return (jsonify(message="Added to favorites!", likes=f"{recipe.likes}"), 200)
 
     return (jsonify(message="We couldn't find that recipe"), 404)
 
-#####################################################################
-######################################################################### Recipe routes:
+############################################################################################
+## Recipe routes:
+
 
 @app.route('/recipes/<int:id>', methods=['GET', 'POST'])
 def recipe_info(id):
     """Get and show recipe meta information from API."""
 
-    recipe = get_recipe(id)
-    similar = get_similar_recipes(id)
-    # similar = get_similar_recipes(id)
+    recipe = Recipe.query.get_or_404(id)
 
     lists = List.query.filter(List.recipes.contains(recipe), List.private == False).all()
+    recipes = get_similar_recipes(id) 
 
-    return render_template('recipes/recipe.html', recipe=recipe, lists=lists, similar=similar)
+    if not recipes and g.API_KEY == API_KEY3:
+        return render_template('recipes/recipe.html', recipe=recipe, lists=lists, recipes=recipes)
 
+    if not recipes:
+        return redirect(url_for('recipe_info', id=id))
 
-@app.route('/search', methods=["GET", "POST"])
-def search_form():
-    """Show search form. Remove previous search results from session."""
+    return render_template('recipes/recipe.html', recipe=recipe, lists=lists, recipes=recipes)
 
-    session.pop('recipes', None)
-
-    form = SearchForm()
-
-    return render_template('search.html', form=form)
-
-def search_request(params):
+def search_request(params, sort):
     """Sends search request to API. Clears recipes saved in session and saves API response in session."""
 
     ## If recipes saved in session, clear ###
     session.pop('recipes', None)
 
     response = requests.get(
-                        f"{BASE_URL}/complexSearch?apiKey={API_KEY}",
-                        params)
+                        f"{BASE_URL}/complexSearch?apiKey={g.API_KEY}",
+                        params) 
+
+    if response.status_code != 200 and g.API_KEY == API_KEY3:
+        return None
+
+    if response.status_code != 200:
+        switch_API_keys()
+        return None
+
     resp = response.json()
-    recipes = resp['results']
+    search_results = resp['results']
 
     ## Saves new search results to session ##
-    session['recipes'] = recipes
+    ids = [recipe['id'] for recipe in search_results]
+    recipes = get_recipes(ids)
 
-    return [get_recipe(recipe['id']) for recipe in recipes]
+    session['recipes'] = ids
+    return Recipe.sort_by(sort, ids)
+
+@app.route('/quick-search', methods=['GET', 'POST'])
+def quick_search():
+    """Handle quick search form from navbar."""
+
+    session.pop('recipes', None)
+
+    if request.method == 'POST':
+        params = {
+                "query": request.form['query'],
+                "number": "20",
+                "addRecipeInformation": "true"
+            }
+        return redirect(url_for('search', params=params, sort="likes"))
 
 
-@app.route('/search/results', methods=['GET', 'POST'])
-def detailed_search():
-    """Shows search results, add results to session so user can return to results page."""
+@app.route('/search', methods=['GET', 'POST'])
+def search_form():
+    """Handle form submission. If not submitted, present form."""
+
+    session.pop('recipes', None)
 
     form = SearchForm()
 
     if form.validate_on_submit():
+
         params = {
             "query": form.query.data,
             "type": form.type.data,
             "cuisine": form.cuisine.data,
             "intolerances": form.intolerances.data,
             "diet": form.diet.data,
-            "number": "12",
-            "sort": form.sort.data,
+            "number": "20",
             "addRecipeInformation": "true"
         }
 
-        recipes = search_request(params)
+        sort = form.sort.data
 
-        return render_template('recipes/filter-recipes.html', recipes=recipes)
+        return redirect(url_for('search', params=params, sort=sort))
+
+    return render_template('search.html', form=form)
+
+@app.route(f'/search/<params>sort-by=<sort>', methods=['GET', 'POST'])
+def search(params, sort):
+    """Handle search request, check for saved search results in session, present if saved."""
+
+    tags = Tag.query.order_by('tag_name').all()
+
+    p = ast.literal_eval(params)
+    query = p['query']
+
+    if 'recipes' in session:
+        ids = session['recipes']
+        recipes = Recipe.sort_by(sort, ids)
+
+        return render_template('recipes/search-results.html', recipes=recipes, query=query, tags=tags, params=params)
+
+    recipes = search_request(p, sort)
+
+    if not recipes and g.API_KEY == API_KEY3:
+        return render_template("500.html")
+
+    if not recipes:
+        return redirect(url_for('search', params=params, sort=sort))
+
+    return render_template('recipes/search-results.html', recipes=recipes, query=query, tags=tags)
+
+@app.route(f'/search/<query>?sort-by=<sort>')
+def sort_search(query, sort):
+    """Sorts search results."""
+
+    tags = Tag.query.order_by('tag_name').all()
+
+    if 'recipes' in session:
+        ids = session['recipes']
+        sorted = Recipe.sort_by(sort, ids)
+
+        return render_template('recipes/search-results.html', recipes=sorted, query=query, tags=tags)
+
+    return render_template('404.html')
+
+@app.route(f'/recipes/filter/<tag>')
+def filter_by_tag(tag):
+    """Filters recipes by tag."""
+
+    tags = Tag.query.order_by('tag_name').all()
+
+    if tag in session['filters']:
+        i = session['filters'].index(tag)
+        session['filters'].pop(i)
+
+        if session['filters'] == []:
+            all_recipes = Recipe.query.all()
+            recipes = random.sample(all_recipes, 12)
+
+            return render_template("recipes/filter-recipes.html", recipes=recipes, tags=tags, selected=None)
+
+    selected = list(session['filters'])
+    selected.append(tag)
+    session['filters'] = selected
+
+    saved_tags = Tag.query.filter(Tag.tag_name.in_(selected)).all()
+    tag_ids = [tag.id for tag in saved_tags]
+
+    recipe_tags = RecipeTags.query.filter(RecipeTags.tag_id.in_(tag_ids)).all()
+    recipe_ids = [recipe.recipe_id for recipe in recipe_tags]
+
+    recipes = [get_recipe(id) for id in recipe_ids]
+
+    return render_template("recipes/filter-recipes.html", recipes=recipes, tags=tags, selected=selected)
+
+#################################################################################
+## not used in app, used to fill in recipe data gaps if any are found.
+
+@app.route('/get-recipe-data', methods=['GET', 'POST'])
+def get_recipe_data():
+
+    db.session.rollback()
+
+    db_recipes = Recipe.query.filter(Recipe.likes == None, Recipe.health_score == None).all()
+    ids = str([recipe.id for recipe in db_recipes])
+    str_ids = ids[1:-1].replace(" ", "")
+
+    response = requests.get(f"{BASE_URL}/informationBulk?apiKey={g.API_KEY}", params={"ids": f"{str_ids}", "includeNutrition": "false"})
     
-    ## if form not submitted, fetch saved recipes from session for recipes/recipes.hhtml rendering ##
-    saved_recipes = session['recipes']
+    if response.status_code != 200:
+        switch_API_keys()
+        return redirect(request.referrer)
 
-    recipes = [ShortRecipe(recipe) for recipe in saved_recipes]
-    return render_template('recipes/filter-recipes.html', recipes=recipes)
+    resp = response.json()
+
+    for res in resp:
+        recipe = Recipe.query.get(res['id'])
+        recipe.likes = res['aggregateLikes']
+        recipe.health_score = res['healthScore']
+        db.session.add(recipe)
+
+    db.session.commit()
+
+    return redirect(request.referrer)
 
 
-@app.route('/quick-search', methods=['GET', 'POST'])
-def quick_search():
-    """Handle quick search form from navbar."""
-
-    if request.method == 'POST':
-        params = {
-                "query": request.form['query'],
-                "number": "12",
-                "sort": "meta-score",
-                "addRecipeInformation": "true"
-            }
-        recipes = search_request(params)
-
-        return render_template('recipes/filter-recipes.html', recipes=recipes)
-    
-    ## if form not submitted, fetch saved recipes from session for recipes/recipes.hhtml rendering ##
-    saved_recipes = session['recipes']
-
-    recipes = [ShortRecipe(recipe) for recipe in saved_recipes]
-    return render_template('recipes/filter-recipes.html', recipes=recipes)
-
-# @app.route(f"/search/filter")
-# def filter_recipes_by_tag():
-#     """Filters recipes by tag or diet name... not sure yet this is my test route."""
-
-######################################################################### Recipe helper functions:
+######################################################################### 
+## Recipe helper functions:
 
 def get_random_recipes(num):
     """Get num number of random recipes"""
@@ -466,8 +641,12 @@ def get_random_recipes(num):
     if len(all_recipes) >= num:
         recipes = random.sample(all_recipes, num)
 
-    response = requests.get(f"{BASE_URL}/random?apiKey={API_KEY}", 
+    response = requests.get(f"{BASE_URL}/random?apiKey={g.API_KEY}", 
                             params={"number": f"{num}"})
+
+    if response.status_code != 200:
+        switch_API_keys()
+        return None
 
     resp = response.json()
     data = resp['recipes']
@@ -478,38 +657,102 @@ def get_random_recipes(num):
 def get_recipe(id):
     """Checks if recipe is in db, gets info from API if not and returns recipe."""
 
-    recipe = Recipe.find_recipe(id)
+    recipe = Recipe.query.filter_by(id=id).first()
 
     if recipe:
         return recipe
 
-    response = requests.get(f"{BASE_URL}/{id}/information?apiKey={API_KEY}", params={"includeNutrition": "false"})
+    response = requests.get(f"{BASE_URL}/{id}/information?apiKey={g.API_KEY}", params={"includeNutrition": "false"})
+
+    if response.status_code != 200:
+        switch_API_keys()
+        return None
 
     resp = response.json()
     recipe = Recipe.make_recipe(resp)
 
     db.session.add(recipe)
     db.session.commit()
+
+    ## runs after recipe added to db since it uses recipe.id as foreign key
+    RecipeTags.get_recipe_tags(resp)
+
     return recipe
+
+
+def get_recipes(ids):
+    "Queries DB first then API to get bulk recipes by id."
+
+    db_recipes = Recipe.query.filter(Recipe.id.in_(ids)).all()
+
+    db_ids = set(recipe.id for recipe in db_recipes)
+    all_ids = set(ids)
+    get_ids = str(all_ids - db_ids)
+    str_ids = get_ids[1:-1].replace(" ", "")
+
+    response = requests.get(f"{BASE_URL}/informationBulk?apiKey={g.API_KEY}", params={"ids": f"{str_ids}", "includeNutrition": "false"})
+    
+    if response.status_code != 200:
+        switch_API_keys()
+        return None
+
+    resp = response.json()
+
+    recipes = [Recipe.make_recipe(r) for r in resp]
+
+    db.session.add_all(recipes)
+    db.session.commit()
+
+     ## gets tags from API response and adds to RecipeTags table, commits to db
+    for r in resp:
+        RecipeTags.get_recipe_tags(r)
+
+    all_recipes = db_recipes + recipes
+
+    return all_recipes
 
 def get_similar_recipes(id):
     """Checks session for similar recipes, if none, get from API using recipe id and saves to session."""
 
-    if f"{id}" in session:
-        return [ShortRecipe(r) for r in session[f"{id}"]]
+    recipe = get_recipe(id)
+    if len(recipe.similar) >= 4:
+        similar = random.sample(recipe.similar, 4)
+        return similar
 
-    response = requests.get(f"{BASE_URL}/{id}/similar?apiKey={API_KEY}", params={"number": "4"})
+    num = 4 - len(recipe.similar)
+
+    response = requests.get(f"{BASE_URL}/{id}/similar?apiKey={g.API_KEY}", params={"number": f"{num}"})
+
+    if response.status_code != 200:
+        switch_API_keys()
+        return None
 
     resp = response.json()
-    id = f"{id}"
-    session[id] = resp
-    recipes = [ShortRecipe(r) for r in resp]
+    ids = [r['id'] for r in resp]
+    recipes = get_recipes(ids)
 
-    print(f"******************************************** SESSION   {session[id]} ********************************************************************************")
-    return recipes
+    for r in recipes:
+        SimilarRecipes.add_similar(id, r.id)
+
+    return recipe.similar
 
 
-######################################################################### Homepage and errors:
+def switch_API_keys():
+    """Checks if quota limit with API key has been reached. Switches API keys if it has"""
+
+    if g.API_KEY == API_KEY:
+        session['API_KEY'] = API_KEY2
+        return None
+
+    elif g.API_KEY == API_KEY2:
+        session['API_KEY'] = API_KEY3
+        return None
+
+    elif g.API_KEY == API_KEY3:
+        return None
+
+######################################################################### 
+## Homepage and errors:
 
 @app.route('/')
 def homepage():
@@ -519,21 +762,30 @@ def homepage():
         return redirect('/signup')
 
     all_recipes = Recipe.query.all()
-    if len(all_recipes) >= 8:
-        recipes = random.sample(all_recipes, 8)
+
+    if len(all_recipes) >= 20:
+        recipes = random.sample(all_recipes, 20)
         return render_template('/recipes/recipes.html', recipes=recipes)
 
     recipes = get_random_recipes(8)
 
     flash(f"Welcome back, {g.user.username}!")
-
+    
     return render_template('/recipes/recipes.html', recipes=recipes)
+
 
 @app.errorhandler(404)
 def page_not_found(e):
     """Handle 404 error"""
 
     return render_template("404.html"), 404
+
+@app.errorhandler(500)
+def API_failure(e):
+    """Handle 500 error."""
+
+    return render_template("500.html"), 500
+
 
 
 ############################################################################
@@ -547,4 +799,5 @@ def add_header(req):
     req.headers["Expires"] = "0"
     req.headers['Cache-Control'] = 'public, max-age=0'
     return req  
+
 

@@ -1,28 +1,36 @@
 {% extends 'base.html' %}
 
-{% block title %}Add List <Form></Form>{% endblock %}
+{% block title %}Create New List{% endblock %}
 
 {% block content %}
 
-<form action="/lists/new" method="POST">
-    {{ form.hidden_tag() }}
-    
-    {% for field in form
-        if field.widget.input_type != 'hidden' %}
-
-   <div class="form-group">
-     {{ field.label }}
-     <br>
-     {{ field }}
-
-     {% for error in field.errors %}
-       {{ error }}
-     {% endfor %}
-   </div>
-
- {% endfor %}
- <button class="btn btn-small btn-success" type="submit">Add List</button>
-
-</form>
+<div class="row justify-content-center mt-2">
+  <div class="col-md-8 col-lg-8">
+  <form action="/lists/new" method="POST">
+      {{ form.csrf_token }}
+      {{ form.request_referrer(value=back)}}
+      {% for field in form if field.widget.input_type != 'hidden' and field.name != 'private' %}
+      {{ field.label }}
+      {{ field(class="form-control")}}
+      {% for error in field.errors %}
+        {{ error }}
+      {% endfor %}
+  {% endfor %}
+  <div class="row mt-3">
+    <div class="col-auto">
+      <div class="form-check form-switch">
+        {{ form.private(class="form-check-input", type="checkbox", role="switch", id="flexSwitchCheckDefault")}}
+        {{ form.private.label(class="form-check-label", for="flexSwitchCheckDefault")}}
+      </div>
+    </div>
+  </div>
+  <div class="row mt-2">
+    <div class="col-auto">
+      <button class="btn btn-sm btn-dark" type="submit">ADD LIST</button>
+    </div>
+  </div>
+  </form>
+  </div>
+</div>
 
 {% endblock %}

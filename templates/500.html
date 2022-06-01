@@ -1,0 +1,11 @@
+{% extends 'base.html' %}
+
+{% block title %}500 Error{% endblock %}
+
+{% block content %}
+<div class="row align-items-center mt-0 pt-0" style="height: 50vh;">
+    <div class="display-3">Sorry, looks like you've reached our daily limit of searching new recipes. This app uses a free account with the Spoonacular API, which means we can only request a limited amount of recipes on a 24 hour basis.</div>
+
+    <div class="lead">You can still browse recipes in <a href="{{url_for('show_all_lists')}}">other user's lists</a> or get a random assortment of recipes on our <a href="/">homepage.</a></div>
+</div>
+{% endblock %}

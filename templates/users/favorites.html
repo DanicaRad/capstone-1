@@ -1,11 +1,132 @@
-{% extends 'recipes/recipes.html' %}
+{% extends 'base.html' %}
 
-{% block title %}Show User's Favorites{% endblock %}
+{% block title %}{{ g.user.username }}'s Favorite Recipes{% endblock %}
 
-{% block user_favorites %}
+{% block content %}
 <div class="mb-3 mt-3">
-<h1>{{ g.user.username }}'s Favorite Recipes</h1>
+<div class="display-6">{{ g.user.username }}'s Favorite Recipes</div>
 </div>
+{% if g.user.favorites %}
+<div class="row row-cols-lg-4 row-cols-md-2 row-cols-sm-1 g-4 justify-content-evenly">
+    {% for recipe in recipes %}
+      <div class="col-lg-3 col-md-6 col-sm-12 card-deck mb-3" id="{{ recipe.id }}">
+      <div class="card recipe-card">
+          <a href="{{ url_for('recipe_info', id=recipe.id) }}">
+          <img class="card-img-top" src="{{ recipe.image_url }}" alt="Card image cap">
+          </a>
+          <div class="card-body">
+            <div class="card-title fs-6 lead fw-bolder text-uppercase">
+              <a class="lead text-dark" href="{{ url_for('recipe_info', id=recipe.id) }}">{{ recipe.title }}</a>
+            </div>
+            <p>
+              {% if recipe.health_score %}
+                <span class="badge bg-success rounded-5 opacity-75" data-bs-toggle="tooltip" title="Average nutrient coverage"><small class="align-top">{{ recipe.health_score }}% <span class="fw-light">HEALTH SCORE</span></small></span>
+              {% endif %}
+              {% for tag in recipe.tags %}
+                <span class="badge bg-light text-dark text-uppercase">{{ tag }}</span>
+              {% endfor %}
+            </p>
+            <div class="card-text">
+              <div class="vstack">
+                <div class="border-top p-2 full-width lead fs-6 text-center" data-bs-toggle="collapse" data-bs-target="#collapse-{{ recipe.id }}" aria-expanded="false" aria-controls="collapseExample">
+                  DESCRIPTION <i class="bi bi-plus"></i>
+                </div>
+                <div id="collapse-{{ recipe.id }}" class="collapse border-top p-2 full-width fs-6 lh-sm">
+                  <small>{{ recipe.summary }}</small>
+                </div>
+              </div>
+              <div class="vstack" id="ingredients">
+                <div class="border-top p-2 full-width lead fs-6 text-center" data-bs-toggle="collapse" data-bs-target="#collapse-1-{{ recipe.id }}" aria-expanded="false" aria-controls="collapseExample">
+                  INGREDIENTS <i class="bi bi-plus"></i>
+                </div>
+                <div id="collapse-1-{{ recipe.id }}" class="collapse border-top p-2 full-width fs-6 lh-sm">
+                  <div id="us" class="ingredient-{{ recipe.id }}">
+                    {% for i in recipe.us %}
+                      <p class="small">{{ i }}</p>
+                    {% endfor %}
+                    <button class="btn btn-sm btn-outline-dark fw-light convert" data-id="{{ recipe.id }}">GET METRIC CONVERSIONS
+                    </button>
+                  </div>
+                  <div id="metric" class="d-none ingredient-{{ recipe.id }}">
+                      {% for i in recipe.metric %}
+                        <p class="small">{{ i }}</p>
+                      {% endfor %}
+                      <button class="btn btn-sm btn-outline-dark fw-light convert" data-id="{{ recipe.id }}">GET US CONVERSIONS
+                      </button>
+                  </div>
+                </div>
+              </div>
+              {% if recipe.instructions %}
+              <div class="vstack">
+                <div class="border-top p-2 full-width lead fs-6 text-center" data-bs-toggle="collapse" data-bs-target="#collapse-2-{{ recipe.id }}" aria-expanded="false" aria-controls="collapseExample">
+                  INSTRUCTIONS <i class="bi bi-plus"></i>
+                </div>
+                <div id="collapse-2-{{ recipe.id }}" class="collapse border-top p-2 full-width fs-6 lh-sm">
+                  <ol class="p-1">
+                    {% for i in recipe.instructions.split(".") %}
+                    {% if i| length > 1 %}
+                      <li class="py-1 small">{{ i }}</li>
+                    {% endif %}
+                    {% endfor %}
+                  </ol>
+                </div>
+              </div>
+            {% endif %}
+            {% if g.user %}
+                <div class="row-col-3">
+                    <form class="recipe-form" method="POST">
+                        <button id="heart" class="btn btn-lg btn-link px-1 bi bi-heart-fill
+                        {{'fav' if recipe in g.user.favorites else 'not-fav'}}" data-id="{{ recipe.id }}" data-delete="true">
+                        </button>
+                        <small class="likes-count" id="{{ recipe.id }}-likes">
+                          {% if recipe.total_likes %}
+                            {{ recipe.total_likes }}
+                          {% else %}
+                            0
+                          {% endif %}
+                        </small>
+                        <div class="btn-group lists-btn">
+                          <button type="button" class="btn btn-link btn-lg p-0" data-bs-toggle="dropdown" aria-expanded="false"><i class="bi bi-bookmark-plus-fill ps-1"></i>
+                          </button>
+                          <ul class="dropdown-menu">
+                          {% for list in g.user.lists %}
+                              {% if not list.has_recipe(recipe.id) %}
+                              <li data-list="{{ list.id }}" data-recipe="{{ recipe.id }}" class="dropdown-item">
+                                {{ list.name }}
+                              </li>
+                              {% else %}
+                              {% endif %}
+                          {% endfor %}
+                          {% if g.user.lists | length > 0 %}
+                              <li><hr class="dropdown-divider"></li>
+                          {% endif %}
+                              <li class="nav-item"><a class="nav-link" href="{{ url_for('add_list') }}">Create New List</a></li>
+                          </ul>
+                      </div>
+                    </form>
+                </div>
+              </div>
+                {% endif %}
+                <div class="card-footer bg-body">
+                  <ul class="list-group list-group-flush">
+                    <li class="list-group-item row row-cols-2 pt-0">
+                        <span class="lead fs-6">READY IN:</span>
+                        <small class="text-right">{{ recipe.readyInMinutes}} mins</small>
+                    </li>
+                    <li class="list-group-item row row-cols-2 pb-0"><span class="lead fs-6">SERVINGS:</span><small class="text-right">{{ recipe.servings }}</small>
+                    </li>
+                  </ul>
+                </div>
+          </div>
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+{% else %}
+    <div class="row align-items-center mt-0 pt-0" style="height: 50vh;">
+        <div class="display-6 my-3 mx-auto">You don't have any favorites yet. <a href="/">Browse recipes</a> to get cooking!</div>
+    </div>
+{% endif %}
 
 
 {% endblock %}

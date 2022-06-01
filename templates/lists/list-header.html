@@ -1,0 +1,9 @@
+<div id="list-header" class="full-width w-100 overflow-hidden position-relative mb-3"><img src="{{ list.image_url}}" alt="image for {{ list.name }}" class="vw-100" id="list-image">
+    <div id="list-heading" class="position-absolute bottom-0">
+        <h2>{{ list.name }}</h2>
+        {% if list.description %}
+        <p>{{ list.description }}</p>
+        {% endif %}
+        <button class="btn btn-sm btn-link p-0"><a class="text-danger p-0" href="{{ url_for('delete_list', id=list.id) }}"><i class="text-danger bi bi-trash"></i> Delete list</a></button>
+    </div>
+</div>

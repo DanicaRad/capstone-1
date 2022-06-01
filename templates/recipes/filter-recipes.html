@@ -1,7 +1,27 @@
 {% extends 'recipes/recipes.html' %}
 
-{% block filter_recipes %}
+{% block filters %}
 
-<h3>Search results:</h3>
+<div class="row justify-content-start row-cols-sm-3 row-cols-md-6 row-cols-lg-auto mt-2 g-0">
+    {% for tag in tags[0:1]%}
+    <div class="col-auto">
+        <i class="bi bi-funnel"></i>
+        {% if selected %}
+            <a href="{{ url_for('filter_by_tag', tag=tag.tag_name)}}" class="badge p-2 m-1 text-uppercase {{ 'text-bg-dark' if tag.tag_name in selected else 'text-bg-light'}}" data-tag="{{ tag.tag_name }}" data-selected="false">{{ tag.tag_name }}</a>
+        {% else %}
+        <a href="{{ url_for('filter_by_tag', tag=tag.tag_name)}}" class="badge p-2 m-1 text-uppercase text-bg-light" data-tag="{{ tag.tag_name }}" data-selected="false">{{ tag.tag_name }}</a>
+        {% endif %}
+    </div>
+    {% endfor %}
+{% for tag in tags[1:] %}
+    <div class="col-auto">
+        {% if selected %}
+            <a href="{{ url_for('filter_by_tag', tag=tag.tag_name)}}" class="badge p-2 m-1 text-uppercase {{ 'text-bg-dark' if tag.tag_name in selected else 'text-bg-light'}}" data-tag="{{ tag.tag_name }}" data-selected="false">{{ tag.tag_name }}</a>
+        {% else %}
+        <a href="{{ url_for('filter_by_tag', tag=tag.tag_name)}}" class="badge p-2 m-1 text-uppercase text-bg-light" data-tag="{{ tag.tag_name }}" data-selected="false">{{ tag.tag_name }}</a>
+        {% endif %}
+    </div>
+{% endfor %}
+</div>
 
 {% endblock %}

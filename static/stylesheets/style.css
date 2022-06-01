@@ -40,21 +40,34 @@ a:hover {
     opacity: .8;
 }
 
-.card-title:hover {
-    opacity: .9;
+
+.bi-heart-fill {
+    padding: 0 .25rem;
 }
 
-.fav {
+.fav, .fav:focus {
     color: coral;
 }
 
-.not-fav {
+.not-fav, .not-fav:focus {
     color: white;
 }
 
 .bi-heart-fill:hover {
     color: chocolate;
 }
+
+.likes-count {
+    position: absolute;
+    right: .5em;
+    top: 2em;
+    font-size: .75em;
+    z-index: 1;
+    font-weight: bolder;
+    color: white;
+}
+
+
 
 #heart {
     text-decoration: none;
@@ -98,16 +111,37 @@ a:hover {
     opacity: .8;
 }
 
+.bottom-trash {
+    position: absolute;
+    bottom: 0;
+    right: 0;
+    padding: 1.5rem 0 1.25rem 1rem;
+    z-index: 1;
+}
+
+.top-trash {
+    position: absolute;
+    top: 0;
+    right: 0;
+    padding:.25rem;
+    z-index: 1;
+}
 
 
 
 /** Users **************************************/
 
 #profile-img {
-    width: 200px;
-    height: 200px;
+    width: 150px;
+    height: 150px;
     border-radius: 100%;
     border: 5px solid grey;
+}
+
+#edit-profile {
+    position: absolute;
+    bottom: 1;
+    left: 1;
 }
 
 

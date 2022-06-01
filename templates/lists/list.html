@@ -1,59 +1,144 @@
 {% extends 'base.html' %}
 
-{% block title %}Show Single List{% endblock %}
+{% block title %}{{ list.name }}{% endblock %}
 
 {% block content %}
 
-<div id="list-header" class="full-width w-100 overflow-hidden position-relative mb-3"><img src="{{ list.image_url}}" alt="image for {{ list.name }}" class="vw-100" id="list-image">
-    <div id="list-heading" class="position-absolute bottom-0">
-        <h2>{{ list.name }}</h2>
-        <p>{{ list.description }}</p>
-        <button class="btn btn-sm btn-link p-0"><a href="{{ url_for('delete_list', id=list.id) }}">Delete list</a></button>
-    </div>
+<div class="row my-3 gap-3 align-items-end">
+  <div class="col-sm-12 col-md-5 col-lg-auto">
+      <span class="display-6">{{ list.name }}</span>
+      {% if g.user and g.user.id == list.user.id %}
+      <a class="small ps-2 text-dark" href="{{ url_for('edit_list', id=list.id)}}"><i class="bi bi-pencil"></i></a>
+      <a class="small ps-2" href="{{ url_for('delete_list', id=list.id) }}"><i class="text-danger bi bi-trash"></i></a>
+      {% endif %}
+  </div>
+  {% if list.description %}
+  <div class="col-sm-12 col-md-6 col-lg-auto">
+    <p class="mb-1 lead">{{ list.description }}</p>
+  </div>
+  {% endif %}
+</div>
+<div class="row align-self-center mb-3">
+  <div class="col-auto">
+    <small class="lead fs-6">POPULAR DIETS IN THIS LIST</small>
+    {% for tag in top_tags %}
+        <small class="badge bg-light text-dark p-2 ms-2 text-uppercase fw-light">{{ tag }}</small>
+    {% endfor %}
+  </div>
 </div>
 
-<div class="row row-col-4">
+<div class="row row-cols-lg-4 row-cols-md-2 row-cols-sm-1 g-4 justify-content-evenly">
 {% for recipe in list.recipes %}
-  <div class="col-sm-3 card-deck mb-3" id="{{ recipe.id }}">
+  <div class="col-lg-3 col-md-6 col-sm-12 card-deck mb-3" id="{{ recipe.id }}">
   <div class="card recipe-card">
+      <a href="{{ url_for('recipe_info', id=recipe.id) }}">
       <img class="card-img-top" src="{{ recipe.image_url }}" alt="Card image cap">
+      </a>
       <div class="card-body">
-        <a href="{{ url_for('recipe_info', id=recipe.id) }}"><h5 class="card-title">{{ recipe.title }}</h5></a>
+        <div class="card-title fs-6 lead fw-bolder text-uppercase">
+          <a class="lead text-dark" href="{{ url_for('recipe_info', id=recipe.id) }}">{{ recipe.title }}</a>
+        </div>
         <p>
-          <span class="badge rounded-pill bg-success">{{ recipe.score }}%</span>
-            {% for tag in recipe.tags %}
-            <span class="badge bg-light text-dark">{{ tag }}</span>
-            {% endfor %}
+          {% if recipe.health_score %}
+            <span class="badge bg-success rounded-5 opacity-75" data-bs-toggle="tooltip" title="Average nutrient coverage"><small class="align-top">{{ recipe.health_score }}% <span class="fw-light">HEALTH SCORE</span></small></span>
+          {% endif %}
+          {% for tag in recipe.tags %}
+            <span class="badge bg-light text-dark text-uppercase">{{ tag }}</span>
+          {% endfor %}
         </p>
-        <p>{{ recipe.summary[0:50] }}...</p>
+        <div class="card-text">
+          <div class="vstack">
+            <div class="border-top p-2 full-width lead fs-6 text-center" data-bs-toggle="collapse" data-bs-target="#collapse-{{ recipe.id }}" aria-expanded="false" aria-controls="collapseExample">
+              DESCRIPTION <i class="bi bi-plus"></i>
+            </div>
+            <div id="collapse-{{ recipe.id }}" class="collapse border-top p-2 full-width fs-6 lh-sm">
+              <small>{{ recipe.summary }}</small>
+            </div>
+          </div>
+          <div class="vstack" id="ingredients">
+            <div class="border-top p-2 full-width lead fs-6 text-center" data-bs-toggle="collapse" data-bs-target="#collapse-1-{{ recipe.id }}" aria-expanded="false" aria-controls="collapseExample">
+              INGREDIENTS <i class="bi bi-plus"></i>
+            </div>
+            <div id="collapse-1-{{ recipe.id }}" class="collapse border-top p-2 full-width fs-6 lh-sm">
+              <div id="us" class="ingredient-{{ recipe.id }}">
+                {% for i in recipe.us %}
+                  <p class="small">{{ i }}</p>
+                {% endfor %}
+                <button class="btn btn-sm btn-outline-dark fw-light convert" data-id="{{ recipe.id }}">GET METRIC CONVERSIONS
+                </button>
+              </div>
+              <div id="metric" class="d-none ingredient-{{ recipe.id }}">
+                  {% for i in recipe.metric %}
+                    <p class="small">{{ i }}</p>
+                  {% endfor %}
+                  <button class="btn btn-sm btn-outline-dark fw-light convert" data-id="{{ recipe.id }}">GET US CONVERSIONS
+                  </button>
+              </div>
+            </div>
+          </div>
+          {% if recipe.instructions %}
+          <div class="vstack">
+            <div class="border-top p-2 full-width lead fs-6 text-center" data-bs-toggle="collapse" data-bs-target="#collapse-2-{{ recipe.id }}" aria-expanded="false" aria-controls="collapseExample">
+              INSTRUCTIONS <i class="bi bi-plus"></i>
+            </div>
+            <div id="collapse-2-{{ recipe.id }}" class="collapse border-top p-2 full-width fs-6 lh-sm">
+              <ol class="p-1">
+                {% for i in recipe.instructions.split(".") %}
+                {% if i| length > 1 %}
+                  <li class="py-1 small">{{ i }}</li>
+                {% endif %}
+                {% endfor %}
+              </ol>
+            </div>
+          </div>
+        {% endif %}
         {% if g.user %}
             <div class="row-col-3">
                 <form class="recipe-form" method="POST">
-                    <button id="trash" data-recipe="{{ recipe.id }}" data-list="{{ list.id }}" class="btn btn-link text-danger bi bi-trash"></button>
+                    <button id="trash" data-recipe="{{ recipe.id }}" data-list="{{ list.id }}" class="bottom-trash btn btn-md btn-link text-danger bi bi-trash me-4 pt-0"></button>
 
-                    <button id="heart" class="btn btn-md btn-link bi
-                      {{'bi-heart-fill' if recipe in g.user.favorites else 'bi-heart'}}" data-id="{{ recipe.id }}">
-                    {% if recipe.favorites %}
-                        {{ recipe.favs() }}
-                    {% endif %}
+                    <button id="heart" class="btn btn-lg btn-link px-1 bi bi-heart-fill
+                    {{'fav' if recipe in g.user.favorites else 'not-fav'}}" data-id="{{ recipe.id }}">
                     </button>
-  
-                    <div class="btn-group" class="lists-btn">
-                        <button type="button" class="btn btn-link btn-sm text-decoration-none dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false"><span class="oi oi-plus"></span>
-                        </button>
-                        <ul class="dropdown-menu">
-                        {% for list in g.user.lists %}
-                            {% if not list.has_recipe(recipe.id) %}
-                            <li data-list="{{ list.id }}" data-recipe="{{ recipe.id }}" class="dropdown-item">
-                              {{ list.name }}
-                            </li>
-                            {% endif %}
-                        {% endfor %}
-                        </ul>
-                    </div>
+                    <small class="likes-count" id="{{ recipe.id }}-likes">
+                      {% if recipe.total_likes %}
+                        {{ recipe.total_likes }}
+                      {% else %}
+                        0
+                      {% endif %}
+                    </small>
+                    <div class="btn-group lists-btn">
+                      <button type="button" class="btn btn-link btn-lg p-0" data-bs-toggle="dropdown" aria-expanded="false"><i class="bi bi-bookmark-plus-fill ps-1"></i>
+                      </button>
+                      <ul class="dropdown-menu">
+                      {% for list in g.user.lists %}
+                          {% if not list.has_recipe(recipe.id) %}
+                          <li data-list="{{ list.id }}" data-recipe="{{ recipe.id }}" class="dropdown-item">
+                            {{ list.name }}
+                          </li>
+                          {% else %}
+                          {% endif %}
+                      {% endfor %}
+                      {% if g.user.lists | length > 0 %}
+                          <li><hr class="dropdown-divider"></li>
+                      {% endif %}
+                          <li class="nav-item"><a class="nav-link" href="{{ url_for('add_list') }}">Create New List</a></li>
+                      </ul>
+                  </div>
                 </form>
             </div>
+          </div>
             {% endif %}
+            <div class="card-footer bg-body">
+              <ul class="list-group list-group-flush">
+                <li class="list-group-item row row-cols-2 pt-0">
+                    <span class="lead fs-6">READY IN:</span>
+                    <small class="text-right">{{ recipe.readyInMinutes}} mins</small>
+                </li>
+                <li class="list-group-item row row-cols-2 pb-0"><span class="lead fs-6">SERVINGS:</span><small class="text-right">{{ recipe.servings }}</small>
+                </li>
+              </ul>
+            </div>
       </div>
     </div>
   </div>

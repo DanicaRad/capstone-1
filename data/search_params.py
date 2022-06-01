@@ -59,10 +59,32 @@ diets = [
     ("whole30", "Whole30")
 ]
 
-tags = {'dairyFree': 'Dairy Free',
+tags = [
+    ("glutenFree", "Gluten Free"),
+    ("dairyFree", "Dairy Free"),
+    ("ketogenic", "Keto"),
+    ("vegetarian", "Vegetarian"),
+    ("lacto-vegetarian", "Lacto Vegetarian"),
+    ("lacto-ovo-vegetarian", "Lacto Ovo Vegetarian"),
+    ("ovo-vegetarian", "Ovo Vegetarian"),
+    ("vegan", "Vegan"),
+    ("pescatarian", "Pescatarian"),
+    ("paleo", "Paleo"),
+    ("paleolithic", "Paleolithic"),
+    ("primal", "Primal"),
+    ("lowFodmap", "Low Fodmap"),
+    ("whole30", "Whole 30")
+]
+
+res_tags = {'dairyFree': 'Dairy Free',
         'glutenFree': 'Gluten Free',
         'vegetarian': 'Vegetarian',
         'vegan': 'Vegan'}
+
+resp_tags = ['dairyFree',
+        'glutenFree',
+        'vegetarian',
+        'vegan']
 
 type = [
     "Dish Type",
@@ -84,10 +106,8 @@ type = [
 ]
 
 sort = [
-    ("", "Sort By"),
-    ("meta-score", "Highest Rated"),
-    ("popularity", "Most Popular"),
-    ("", "Most Relevant"),
-    ("healthiness", "Most Nutritious"),
-    ("random", "Surprise me!")
+    ("likes", "Sort By"),
+    ("likes", "Most Popular"),
+    ("health_score", "Most Nutritious"),
+    ("total_min", "Total Cook Time")
 ]
