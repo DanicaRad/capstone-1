@@ -7,4 +7,3 @@
 /dumplocaldb
 /seed.py
 /migrations/__pycache__
-/secret.py

@@ -15,6 +15,9 @@ from models import db, connect_db, User, List, Recipe, RecipeList, Favorites, Ta
 
 CURR_USER_KEY = "curr_user"
 BASE_URL = f"https://api.spoonacular.com/recipes"
+API_KEY = '979dfa9f09634c8faf4ba8e387c1b0ab'
+API_KEY2 = 'e9bf0ccc334c426094129c237e94055a'
+API_KEY3 = '5de13e67157c448f9608ba2c8d0b825c'
 
 app = Flask(__name__)
 
@@ -26,7 +29,7 @@ app.config['SQLALCHEMY_DATABASE_URI'] = (
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 app.config['SQLALCHEMY_ECHO'] = True
 app.config['DEBUG_TB_INTERCEPT_REDIRECTS'] = False
-app.config['SECRET_KEY'] = secret_key
+app.config['SECRET_KEY'] = "Winnie"
 toolbar = DebugToolbarExtension(app)
 migrate = Migrate(app, db)
 
