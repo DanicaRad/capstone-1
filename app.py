@@ -10,13 +10,11 @@ import ast
 from flask_debugtoolbar import DebugToolbarExtension
 from sqlalchemy.exc import IntegrityError
 from forms import ListForm, SearchForm, UserAddForm, LoginForm, UserAddForm, UserEditForm
+from secret import API_KEY, API_KEY2, API_KEY3, secret_key
 from models import db, connect_db, User, List, Recipe, RecipeList, Favorites, Tag, RecipeTags, SimilarRecipes
 
 CURR_USER_KEY = "curr_user"
 BASE_URL = f"https://api.spoonacular.com/recipes"
-API_KEY = '979dfa9f09634c8faf4ba8e387c1b0ab'
-API_KEY2 = 'e9bf0ccc334c426094129c237e94055a'
-API_KEY3 = '5de13e67157c448f9608ba2c8d0b825c'
 
 app = Flask(__name__)
 
@@ -28,7 +26,7 @@ app.config['SQLALCHEMY_DATABASE_URI'] = (
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 app.config['SQLALCHEMY_ECHO'] = True
 app.config['DEBUG_TB_INTERCEPT_REDIRECTS'] = False
-app.config['SECRET_KEY'] = "Winnie"
+app.config['SECRET_KEY'] = secret_key
 toolbar = DebugToolbarExtension(app)
 migrate = Migrate(app, db)
 
@@ -48,7 +46,11 @@ def add_apiKey_to_g():
 def add_user_and_API_to_g():
     """If we're logged in, add curr user to Flask global."""
 
-    g.API_KEY = session['API_KEY']
+    if 'API_KEY' in session:
+        g.API_KEY = session['API_KEY']
+
+    else:
+        g.API_KEY = API_KEY
 
     if CURR_USER_KEY in session:
         g.user = User.query.get(session[CURR_USER_KEY])
@@ -753,9 +755,6 @@ def switch_API_keys():
 def homepage():
     """Show homepage."""
 
-    if not g.user:
-        return redirect('/signup')
-
     all_recipes = Recipe.query.all()
 
     if len(all_recipes) >= 20:
@@ -763,6 +762,10 @@ def homepage():
         return render_template('/recipes/recipes.html', recipes=recipes)
 
     recipes = get_random_recipes(8)
+
+    if not g.user:
+        flash(f"Welcome! Login or signup to start making your own cook books!")
+        return render_template('/recipes/recipes.html', recipes=recipes)
 
     flash(f"Welcome back, {g.user.username}!")
     
@@ -776,10 +779,16 @@ def page_not_found(e):
     return render_template("404.html"), 404
 
 @app.errorhandler(500)
-def API_failure(e):
+def internal_server_error(e):
     """Handle 500 error."""
 
     return render_template("500.html"), 500
+
+@app.route('/error')
+def show_error_page():
+    """Route for Heroku Error URL."""
+
+    return render_template('error.html')
 
 
 

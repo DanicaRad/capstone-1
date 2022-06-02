@@ -35,7 +35,6 @@
       </div>
     </div>
 
-      {% if g.user %}
 
       <div class="row">
           <form class="recipe-form" method="POST">
@@ -51,26 +50,28 @@
               </small>
 
               <div class="btn-group lists-btn">
-                  <button type="button" class="btn btn-link btn-lg p-0" data-bs-toggle="dropdown" aria-expanded="false"><i class="bi bi-bookmark-plus-fill ps-1"></i>
-                  </button>
-                  <ul class="dropdown-menu">
+                <button type="button" class="btn btn-link btn-lg p-0" data-bs-toggle="dropdown" aria-expanded="false"><i class="bi bi-bookmark-plus-fill ps-1"></i>
+                </button>
+                <ul class="dropdown-menu">
+                  {% if g.user %}
+                  {% if g.user.lists | length > 0 %}
                   {% for list in g.user.lists %}
-                      {% if not list.has_recipe(recipe.id) %}
-                      <li data-list="{{ list.id }}" data-recipe="{{ recipe.id }}" class="dropdown-item">
-                        {{ list.name }}
-                      </li>
-                      {% else %}
+                    {% if not list.has_recipe(recipe.id) %}
+                    <li data-list="{{ list.id }}" data-recipe="{{ recipe.id }}" class="dropdown-item">
+                      {{ list.name }}
+                    </li>
                       {% endif %}
                   {% endfor %}
-                  {% if g.user.lists | length > 0 %}
-                    <li><hr class="dropdown-divider"></li>
+                  <li><hr class="dropdown-divider"></li>
                   {% endif %}
-                    <li class="nav-item"><a class="nav-link text-center" href="{{ url_for('add_list') }}">Create New List</a></li>
-                  </ul>
+                    <li class="nav-item"><a class="nav-link" href="{{ url_for('add_list') }}">Create New List</a></li>
+                    {% else %}
+                    <li class="nav-item"><a href="{{ url_for('signup') }}">Signup</a> or <a href="{{ url_for('login') }}">login</a> to start creating lists.</li>
+                    {% endif %}
+                </ul>
               </div>
           </form>
       </div>
-      {% endif %}
       <div class="card-footer bg-body">
       <ul class="list-group list-group-flush">
         <li class="list-group-item row row-cols-2 pt-0">

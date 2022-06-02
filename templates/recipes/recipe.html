@@ -9,21 +9,27 @@
 <div id="recipe-header" class="full-width overflow-hidden card-image-top h-auto"><img src="{{ recipe.image_url}}" alt="image for {{ recipe.title }}" class="vw-100 img-fluid" id="recipe-image">
     <div id="recipe-heading" class="position-absolute bottom-0">
         <div class="display-2 text-uppercase">{{ recipe.title }}</div>
-        {% if g.user %}
         <form method="POST" class="recipe-form">
             <div class="btn-group" class="lists-btn">
                 <button type="button" class="btn btn-dark btn-sm fw-light dropdown-toggle save-btn" data-bs-toggle="dropdown" aria-expanded="false">SAVE
                 </button>
 
                 <ul class="dropdown-menu">
-                {% for list in g.user.lists %}
-                {% if not list.has_recipe(recipe.id) %}
-                    <li data-list="{{ list.id }}" data-recipe="{{ recipe.id }}" class="dropdown-item">
-                        {{ list.name }}
-                    </li>
-                {% endif %}
-                {% endfor %}
+                    {% if g.user %}
+                      {% if g.user.lists | length > 0 %}
+                        {% for list in g.user.lists %}
+                          {% if not list.has_recipe(recipe.id) %}
+                            <li data-list="{{ list.id }}" data-recipe="{{ recipe.id }}" class="dropdown-item">
+                            {{ list.name }}
+                            </li>
+                          {% endif %}
+                        {% endfor %}
+                            <li><hr class="dropdown-divider"></li>
+                      {% endif %}
                     <li class="nav-item"><a class="nav-link" href="{{ url_for('add_list') }}">Create New List</a></li>
+                    {% else %}
+                        <li class="nav-item"><a href="{{ url_for('signup') }}">Signup</a> or <a href="{{ url_for('login') }}">login</a> to start creating lists.</li>
+                    {% endif %}
                 </ul>
             </div>
             <button class="btn pe-0 btn-lg btn-link bi bi-heart-fill
@@ -37,7 +43,6 @@
                 {% endif %}
               </small>
         </form>
-        {% endif %}
     </div>
 </div>
 </div>
